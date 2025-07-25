@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import AxiosInstances from '../apiManager';
-import { setToken } from '../../../../../DoctorSync/frontend/vite-project/src/helper';
+import { setToken } from '../helper/index'
 import useUserStore from '../store/user'
 
 const signin = () => {
