@@ -13,3 +13,5 @@ return;
 const removeToken=()=>{
     return localStorage.removeItem(TOKEN);
 }
+
+export { getToken, setToken, removeToken };
