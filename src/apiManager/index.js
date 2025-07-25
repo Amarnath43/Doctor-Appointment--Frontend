@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { BASE_URL } from '../const/env.const'
 import toast from 'react-hot-toast'
-import { getToken, removeToken } from '../../../../../DoctorSync/frontend/vite-project/src/helper';
+import { getToken, removeToken } from '../helper/index'
 import { USER_STORE_PERSIST } from '../const/user';
 
 const AxiosInstances = axios.create({
