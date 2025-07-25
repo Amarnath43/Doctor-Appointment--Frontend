@@ -14,8 +14,10 @@ const HospitalCard = ({ id, name, imageUrl, location, doctorCount }) => {
       <img
         src={
           imageUrl
-            ? `${import.meta.env.VITE_BACKEND_URL}/${imageUrl}`
+            ? `${import.meta.env.VITE_BACKEND_URL}${imageUrl[0]}`
             : '/default-hospital.png'
+
+            
         }
         onError={(e) => {
           e.target.onerror = null; // prevent infinite loop
