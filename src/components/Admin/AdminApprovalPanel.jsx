@@ -94,7 +94,7 @@ const AdminApprovalPanel = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-primary/5">
+        <div className="min-h-screen-[20vh] bg-gradient-to-br from-background via-accent/20 to-primary/5">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
 

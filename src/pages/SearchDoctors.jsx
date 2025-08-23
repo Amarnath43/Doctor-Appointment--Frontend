@@ -4,6 +4,9 @@ import AxiosInstances from '../apiManager'
 import DoctorCard from '../components/DoctorCard'
 import { Search, Loader } from 'lucide-react'; // Use Loader as a spinner
 import { useSearchParams } from 'react-router-dom';
+import dayjs from 'dayjs'
+import { makePublicUrlFromKey } from '../utils/s3PublicUrl';
+
 const SearchDoctors = () => {
   const [specializations, setSpecializations] = useState([]);
   const [specialization, setSpecialization] = useState('');
@@ -23,7 +26,7 @@ const SearchDoctors = () => {
       try {
         const response = await AxiosInstances.get('/user/all-specializations');
         let allSpecs = response.data.specializations || [];
-
+        console.log(allSpecs)
         const specFromURL = searchParams.get('specialization');
 
         // Inject specFromURL into options if missing
@@ -183,10 +186,14 @@ const SearchDoctors = () => {
                 experience={doctor.experience}
                 hospital={doctor.hospital?.name || "Unknown Clinic"}
                 location={doctor.hospital?.location || "Unknown Location"}
-                nextAvailability={"Today, 4 PM"} // Optional dynamic
+                nextAvailability={
+                  doctor?.nextAvailability?.dateTime
+                    ? dayjs(doctor.nextAvailability.dateTime).format('dddd, MMMM D, YYYY h:mm A')
+                    : "No slots available"
+                }
                 consultationFee={doctor.fee}
                 profilePicture={
-                  doctor.user?.profilePicture ||
+                  makePublicUrlFromKey(doctor.user?.profilePicture)||
                   `https://ui-avatars.com/api/?name=${doctor.user?.name || "Doctor"}&background=random`
                 }
                 onClick={(id) => console.log("Clicked:", id)}

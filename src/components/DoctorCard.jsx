@@ -14,9 +14,8 @@ const DoctorCard = ({
   profilePicture,
   onClick
 }) => {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   
-
   const goToDetails = (e) => {
     e.stopPropagation();
     console.log(`Booking appointment with Dr. ${name}`);
@@ -26,49 +25,45 @@ const DoctorCard = ({
   return (
     <div
       onClick={goToDetails}
-      className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer max-w-sm mx-auto overflow-hidden"
+      className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer max-w-sm mx-auto overflow-hidden"
     >
-      {/* Top Section */}
-      <div className="flex items-center gap-4 p-5 border-b border-gray-100">
+      {/* Header with Doctor Info */}
+      <div className="flex items-center gap-3 p-4">
         <img
           src={profilePicture}
           alt={`Dr. ${name}`}
-          className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
+          className="w-14 h-14 rounded-full object-cover border-2 border-blue-200"
         />
-        <div className="flex flex-col">
-          <h3 className="text-lg font-semibold text-gray-800 truncate">Dr. {name}</h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold text-gray-800 truncate">Dr. {name}</h3>
           <p className="text-sm text-blue-600">{specialty}</p>
-          <p className="text-xs text-gray-500">{experience} yrs experience</p>
+          <p className="text-xs text-gray-500">{experience} yrs • {hospital}</p>
         </div>
       </div>
 
-      {/* Middle Info */}
-      <div className="p-5 space-y-3 text-sm text-gray-700">
-        <div className="text-sm font-medium text-gray-800">{hospital}</div>
-
-        <div className="flex items-center gap-2 text-gray-600">
-          <MapPin className="w-4 h-4 text-gray-400" />
-          <span>{location}</span>
+      {/* Compact Info Grid */}
+      <div className="px-4 pb-4 space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1 text-gray-600">
+            <MapPin className="w-3.5 h-3.5 text-gray-400" />
+            <span className="truncate">{location}</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-green-500" />
+            <span className="text-green-600 font-medium">{nextAvailability}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 text-blue-500" />
+            <span className="font-semibold text-gray-900">₹{consultationFee}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-green-500" />
-          <span className="text-gray-600">Next:</span>
-          <span className="font-medium text-green-600">{nextAvailability}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-blue-500" />
-          <span className="text-gray-600">Fee:</span>
-          <span className="font-semibold text-gray-900">₹{consultationFee}</span>
-        </div>
-      </div>
-
-      {/* Bottom CTA */}
-      <div className="px-5 pb-5 pt-3">
         <button
           onClick={goToDetails}
-          className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl shadow-sm transition duration-200"
+          className="w-full mt-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition duration-200"
         >
           Book Appointment
         </button>

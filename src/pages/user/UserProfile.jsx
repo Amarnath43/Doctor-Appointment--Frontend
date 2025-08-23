@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import EditProfileModal from './EditProfileModal'
 import useUserStore from '../../store/user'
+import { makePublicUrlFromKey } from '../../utils/s3PublicUrl'
 
 const UserProfile = () => {
   const {user, setUser}=useUserStore();
@@ -31,19 +32,34 @@ const UserProfile = () => {
 })
 
 useEffect(() => {
-  if (user) {
+  const loadProfileImage = async () => {
+    let imageUrl = null;
+
+    if (user?.profilePicture) {
+      try {
+        imageUrl=makePublicUrlFromKey(user.profilePicture)
+      } catch (error) {
+        console.error('Failed to get public image URL:', error);
+      }
+    }
+
     setUserData({
       name: user.name,
       email: user.email,
       phone: user.phone,
-      profilePicture: user.profilePicture || null,
+      profilePicture: imageUrl || null,
       dob: user?.profile?.dob || '',
       gender: user?.profile?.gender,
       bloodGroup: user?.profile?.bloodGroup,
       address: user?.profile?.address
     });
+  };
+
+  if (user) {
+    loadProfileImage();
   }
 }, [user]);
+
   
 
   const handleEditProfile = () => {
@@ -100,27 +116,32 @@ useEffect(() => {
       {/* Main Content */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
         {/* Profile Header Card */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 mb-6 shadow-xl">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
-            {userData.profilePicture ? (
-              <img 
-                src={userData.profilePicture} 
-                alt="Profile" 
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white object-cover shadow-lg"
-              />
-            ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white bg-white flex items-center justify-center shadow-lg">
-                <span className="text-xl sm:text-2xl font-bold text-gray-700">
-                  {getInitials(userData.name)}
-                </span>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden mb-6">
+          <div className="h-24 md:h-32" />
+          <div className="px-6 pb-6 -mt-16 sm:-mt-20">
+            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
+              {userData.profilePicture ? (
+                <img
+                  src={userData.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          userData.profilePicture || 'Doctor'
+                        )}&background=random`}
+                  alt="Profile"
+                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white object-cover shadow-lg"
+                />
+              ) : (
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-slate-100 flex items-center justify-center shadow-lg">
+                  <span className="text-3xl sm:text-4xl font-bold text-slate-600">
+                    {getInitials(userData.name)}
+                  </span>
+                </div>
+              )}
+              <div className="text-center sm:text-left sm:pb-4">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{userData.name}</h2>
+                <p className="text-gray-500 flex items-center justify-center sm:justify-start gap-2 mt-1">
+                  <Mail className="w-4 h-4" />
+                  {userData.email}
+                </p>
               </div>
-            )}
-            <div className="text-white">
-              <h2 className="text-2xl sm:text-3xl font-bold">{userData.name}</h2>
-              <p className="text-blue-100 flex items-center justify-center sm:justify-start gap-2 mt-2 text-base">
-                <Mail className="w-4 h-4" />
-                {userData.email}
-              </p>
             </div>
           </div>
         </div>

@@ -40,6 +40,11 @@ const HospitalsPage = () => {
     setSearchParams({ page: pageNum });
   };
 
+  <div className="flex flex-col items-center justify-center min-h-screen min-w-screen">
+        <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+        <p className="mt-4 text-gray-600 font-medium">Loading...</p>
+      </div>
+
   return (
     <div className="px-4 sm:px-20 py-4">
       <NavBar />

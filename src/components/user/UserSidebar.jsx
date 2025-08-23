@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   User,
@@ -28,7 +28,7 @@ const UserSidebar = ({ isOpen, setIsOpen }) => {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -58,8 +58,8 @@ const UserSidebar = ({ isOpen, setIsOpen }) => {
               <User className="text-white" size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Patient Panel</h2>
-              <p className="text-sm text-gray-600">Healthcare Dashboard</p>
+              <h2 className="text-xl font-bold text-gray-800">User Panel</h2>
+              <p className="text-sm text-gray-600">QuickMediLink Dashboard</p>
             </div>
           </div>
         </div>
@@ -92,26 +92,26 @@ const UserSidebar = ({ isOpen, setIsOpen }) => {
             </button>
 
            {isHistoryOpen && (
-  <div className="ml-6 mt-2 space-y-1">
-    <NavLink to="appointment-history/upcoming" className={linkClass} onClick={() => setIsOpen(false)}>
-      <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm hover:from-green-100 hover:to-emerald-100 transition-all">
-        <CalendarCheck size={16} className="text-green-600" />
-        <span className="text-sm font-medium">Upcoming</span>
-      </div>
-    </NavLink>
-    <NavLink to="appointment-history/past" className={linkClass} onClick={() => setIsOpen(false)}>
-      <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg shadow-sm hover:from-purple-100 hover:to-violet-100 transition-all">
-        <Clock size={16} className="text-purple-600" />
-        <span className="text-sm font-medium">Past</span>
-      </div>
-    </NavLink>
-    <NavLink to="appointment-history/cancelled" className={linkClass} onClick={() => setIsOpen(false)}>
-      <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-rose-50 to-red-50 rounded-lg shadow-sm hover:from-rose-100 hover:to-red-100 transition-all">
-        <XCircle size={16} className="text-rose-600" />
-        <span className="text-sm font-medium">Cancelled</span>
-      </div>
-    </NavLink>
-  </div>
+ <div className="ml-6 mt-2 space-y-1">
+   <NavLink to="appointment-history/upcoming" className={linkClass} onClick={() => setIsOpen(false)}>
+     <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm hover:from-green-100 hover:to-emerald-100 transition-all">
+       <CalendarCheck size={16} className="text-green-600" />
+       <span className="text-sm font-medium">Upcoming</span>
+     </div>
+   </NavLink>
+   <NavLink to="appointment-history/past" className={linkClass} onClick={() => setIsOpen(false)}>
+     <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg shadow-sm hover:from-purple-100 hover:to-violet-100 transition-all">
+       <Clock size={16} className="text-purple-600" />
+       <span className="text-sm font-medium">Past</span>
+     </div>
+   </NavLink>
+   <NavLink to="appointment-history/cancelled" className={linkClass} onClick={() => setIsOpen(false)}>
+     <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-rose-50 to-red-50 rounded-lg shadow-sm hover:from-rose-100 hover:to-red-100 transition-all">
+       <XCircle size={16} className="text-rose-600" />
+       <span className="text-sm font-medium">Cancelled</span>
+     </div>
+   </NavLink>
+ </div>
 )}
 
           </div>
@@ -131,7 +131,7 @@ const UserSidebar = ({ isOpen, setIsOpen }) => {
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
-          <p className="text-xs text-gray-500 text-center">© 2024 Healthcare System</p>
+          <p className="text-xs text-gray-500 text-center">© 2025 QuickMediLink</p>
         </div>
       </aside>
     </>

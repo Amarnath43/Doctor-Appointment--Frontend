@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { BarChart2, Calendar, History, User, Menu, X } from 'lucide-react';
+import { BarChart2, Calendar, History, User, Menu, X, Star, Home } from 'lucide-react';
 
 const DoctorSidebar = ({ isOpen, setIsOpen }) => {
   
@@ -28,7 +28,7 @@ const DoctorSidebar = ({ isOpen, setIsOpen }) => {
       <aside
         className={`
           bg-white shadow-2xl h-screen w-72
-          fixed top-0 left-0 z-50
+          fixed top-0 left-0 z-30
           transform transition-all duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:sticky lg:translate-x-0 lg:block lg:shadow-xl
@@ -53,7 +53,7 @@ const DoctorSidebar = ({ isOpen, setIsOpen }) => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-800">Doctor Panel</h2>
-              <p className="text-sm text-gray-600">Healthcare Dashboard</p>
+              <p className="text-sm text-gray-600">QuickMediLink Dashboard</p>
             </div>
           </div>
         </div>
@@ -65,6 +65,12 @@ const DoctorSidebar = ({ isOpen, setIsOpen }) => {
               Main Menu
             </h3>
             <div className="space-y-2">
+              <NavLink to="/doctor/home" className={linkClass}>
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200 transition-colors duration-200">
+                  <Home size={18} />
+                </div>
+                <span className="font-medium">Home</span>
+              </NavLink>
               <NavLink to="analytics" className={linkClass}>
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 group-hover:from-blue-200 group-hover:to-indigo-200 transition-colors duration-200">
                   <BarChart2 size={18} />
@@ -92,6 +98,13 @@ const DoctorSidebar = ({ isOpen, setIsOpen }) => {
                 </div>
                 <span className="font-medium">Edit Profile</span>
               </NavLink>
+
+              <NavLink to="reviews" className={linkClass}>
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 group-hover:from-orange-200 group-hover:to-amber-200 transition-colors duration-200">
+                  <Star size={18} />
+                </div>
+                <span className="font-medium">Reviews</span>
+              </NavLink>
             </div>
           </div>
         </nav>
@@ -100,7 +113,7 @@ const DoctorSidebar = ({ isOpen, setIsOpen }) => {
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
           <div className="text-center">
             <p className="text-xs text-gray-500">
-              © 2024 Healthcare System
+              © 2025 QuickMediLink
             </p>
           </div>
         </div>

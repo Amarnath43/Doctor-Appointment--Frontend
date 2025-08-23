@@ -27,12 +27,19 @@ import AdminApprovalPanel from '../components/Admin/AdminApprovalPanel';
 import AllUsers from '../components/Admin/AllUsers';
 import HospitalList from '../components/Admin/HospitalList';
 import AppointmentHistoryAdmin from '../pages/Admin/AppointmentHistoryAdmin';
-
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage'
+import VerifyOtpPage from '../pages/VerifyOtpPage';
+import VerifyDoctorOtp from '../pages/VerifyDoctorOTP';
+import DoctorHomePage from '../pages/doctor/DoctorHomePage';
+import AdminHomepage from '../pages/Admin/AdminHomepage';
+import DoctorReviewsPanel from '../pages/doctor/DoctorReviewsPanel';
+import AdminReviewsPage from '../pages/Admin/AdminReviewsPage';
 
 const appRoutes = [
   { path: '/', element: <HomePage /> },
-  //{path: '/login', element: <LoginPage/>},
   { path: '/doctor/register', element: <RegisterDoctor /> },
+  { path: '/verify-doctor-otp', element: <VerifyDoctorOtp /> },
   { path: '/user/register', element: <RegisterUser /> },
   { path: '/signin', element: <Signin /> },
   { path: '/search-doctors', element: <SearchDoctors /> },
@@ -42,9 +49,20 @@ const appRoutes = [
   { path: '/hospitals', element: <HospitalsPage /> },
   { path: '/hospitals/:hospitalId', element: <HospitalPage /> },
   { path: '/doctor/:id', element: <GoToDetailsPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
+  { path: "/verify-otp", element: <VerifyOtpPage /> },
 
   { path: '/appointment/success', element: <AppointmentSuccess /> },
   { path: '/appointment/:appointmentId', element: <AppointmentDetails /> },
+
+  { path: '/doctor/home', 
+    element: (
+      <ProtectedRoute allowedRoles={['doctor']}>
+        <DoctorHomePage /> 
+      </ProtectedRoute>
+    )
+   },
   // Doctor Dashboard Routes
   {
     path: '/doctor',
@@ -59,6 +77,7 @@ const appRoutes = [
           { path: 'slots', element: <SetDoctorSlots /> },
           { path: 'history', element: <AppointmentHistory /> },
           { path: 'profile', element: <EditProfile /> },
+          { path: 'reviews', element: <DoctorReviewsPanel /> },
         ]
       }
 
@@ -69,49 +88,59 @@ const appRoutes = [
 
 
   {
-  path: '/user',
-  element: <ProtectedRoute allowedRoles={['user']} />,
-  children: [
-    {
-      path: 'dashboard',
-      element: <UserDashboardLayout />,
-      children: [
-        // Default redirect to upcoming
-        { index: true, element: <Navigate to="appointment-history/upcoming" replace /> },
+    path: '/user',
+    element: <ProtectedRoute allowedRoles={['user']} />,
+    children: [
+      {
+        path: 'dashboard',
+        element: <UserDashboardLayout />,
+        children: [
+          // Default redirect to upcoming
+          { index: true, element: <Navigate to="appointment-history/upcoming" replace /> },
 
-        // Appointment routes
-        { path: 'appointment-history/upcoming', element: <AppointmentList /> },
-        { path: 'appointment-history/past', element: <AppointmentList /> },
-        { path: 'appointment-history/cancelled', element: <AppointmentList /> },
-        {path:'profile',element:<UserProfile/>}
+          // Appointment routes
+          { path: 'appointment-history/upcoming', element: <AppointmentList /> },
+          { path: 'appointment-history/past', element: <AppointmentList /> },
+          { path: 'appointment-history/cancelled', element: <AppointmentList /> },
+          { path: 'profile', element: <UserProfile /> }
 
-        // Profile route
-        //{ path: 'profile', element: <UserProfile /> }
-      ]
-    }
-  ]
-},
+          // Profile route
+          //{ path: 'profile', element: <UserProfile /> }
+        ]
+      }
+    ]
+  },
+  {
+    path: '/admin/home',
+    element: (
+      <ProtectedRoute allowedRoles={['admin']}>
+        <AdminHomepage />  {/* or AdminHomePage */}
+      </ProtectedRoute>
+    )
+  },
+
 
 {
-  path: '/admin',
-  element: <ProtectedRoute allowedRoles={['admin']} />,
-  children: [
-    {
-      path: 'dashboard',
-      element: <AdminDashboardLayout />,
-      children: [
-        
-        { index: true, element: <Navigate to="analytics" replace /> },
-        
-        { path: 'analytics', element: <AdminDashboard/> },
-        { path: 'manage-entities', element: <AdminApprovalPanel /> },
-        {path:'allusers',element:<AllUsers/>},
-        {path:'hospital-list', element:<HospitalList/>},
-        {path:'appointment-history',element:<AppointmentHistoryAdmin/>}
-      ]
-    }
-  ]
-}
+    path: '/admin',
+    element: <ProtectedRoute allowedRoles={['admin']} />,
+    children: [
+      {
+        path: 'dashboard',
+        element: <AdminDashboardLayout />,
+        children: [
+
+          { index: true, element: <Navigate to="analytics" replace /> },
+
+          { path: 'analytics', element: <AdminDashboard /> },
+          { path: 'manage-entities', element: <AdminApprovalPanel /> },
+          { path: 'allusers', element: <AllUsers /> },
+          { path: 'hospital-list', element: <HospitalList /> },
+          { path: 'appointment-history', element: <AppointmentHistoryAdmin /> },
+          {path:'reviews',element: < AdminReviewsPage/> }
+        ]
+      }
+    ]
+  }
 
 ];
 

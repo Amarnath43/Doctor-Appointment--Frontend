@@ -17,7 +17,7 @@ const AdminDashboardLayout = () => {
         <DashboardNavbar onSidebarToggle={() => setIsSidebarOpen(true)} />
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto px-4">
+        <div className="flex-1 overflow-y-auto p-4">
           <Outlet />
         </div>
       </div>

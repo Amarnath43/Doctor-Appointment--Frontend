@@ -1,9 +1,10 @@
-import React from 'react'
-import { NavLink } from 'react-router-dom'
-import { useForm } from "react-hook-form"
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useForm } from "react-hook-form";
+import { Loader2 } from 'lucide-react';
 import AxiosInstances from '../apiManager';
+import NavBar from '../components/NavBar';
+import { toast } from 'react-hot-toast';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -14,141 +15,127 @@ const Signup = () => {
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm()
+    } = useForm();
 
     const onSubmit = async (data) => {
         setIsLoading(true);
-        console.log("data", data)
         try {
             const response = await AxiosInstances.post('/user/register', data);
-            console.log(response);
-            reset()
-            navigate('/signin')
+            toast.success(response?.data?.message || 'OTP sent to your email');
+            localStorage.setItem('authEmail', data.email);
+            reset();
+            navigate('/verify-otp', { state: { isLoginFlow: false } });
+        } catch (e) {
+            console.error(e);
+            toast.error(e.response?.data?.message || 'An unexpected error occurred.');
+        } finally {
+            setIsLoading(false);
         }
-        catch (e) {
-            console.log(e);
-
-        }
-        finally {
-            setIsLoading(false)
-        }
-
     };
 
     return (
-        <div className='flex justify-center items-center h-screen '>
-            <div className='bg-white w-full  text-center px-6 py-8 rounded-xl '>
-                <h1 className='font-bold text-3xl text-gray-800 mb-4'>
-                    Register as User
-                </h1>
-                <p className='text-gray-600 mb-6'>Sign in to access your account</p>
+        <div className='min-h-screen bg-gray-50 flex flex-col px-4 sm:px-20 py-3'>
+            <NavBar />
+            <div className='flex-1 flex justify-center items-center p-4 sm:p-6'>
+                <div className='bg-white w-full max-w-md px-8 py-8 rounded-2xl shadow-xl border border-gray-200'>
+                    <div className='text-center mb-6'>
+                        <h1 className='text-3xl font-extrabold text-gray-900'>Get Started 🚀</h1>
+                        <p className='mt-2 text-gray-600'>Create your account to get started</p>
+                    </div>
 
-                <form onSubmit={handleSubmit(onSubmit)}>
-
-                    <div>
-                        {/* Name field*/}
-                        <div>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <div className='mb-4'>
                             <input
                                 type="text"
-                                placeholder='Name'
-                                className='w-[300px] px-3 py-2 border bg-gray-100 rounded-lg placeholder-gray-500 mt-4 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                placeholder='Full Name'
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                                    errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                }`}
                                 {...register("name", { required: "Name is required" })}
                             />
+                            {errors.name && <p className='mt-1 text-xs text-red-600'>{errors.name.message}</p>}
                         </div>
 
-                        {
-                            errors.name && (
-                                <p style={{ color: 'red' }}>{errors.name.message}</p>
-                            )
-                        }
-
-                        {/* Email field*/}
-
-
-
-                        <div>
+                        <div className='mb-4'>
                             <input
                                 type="email"
-                                placeholder='Email address'
-                                className='w-[300px] px-3 py-2 border bg-gray-100 rounded-lg placeholder-gray-500 mt-4 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                placeholder='Email Address'
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                                    errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                }`}
                                 {...register("email", {
-                                    required: "Email is required", pattern: {
-                                        value: /^[A-z0-9._%+-]+@[A-z0-9.-]+.[A-z]{2,4}$/i,
+                                    required: "Email is required",
+                                    pattern: {
+                                        value: /^[A-z0-9._%+-]+@[A-z0-9.-]+\.[A-z]{2,4}$/i,
                                         message: "Invalid email address"
                                     }
                                 })}
                             />
+                            {errors.email && <p className='mt-1 text-xs text-red-600'>{errors.email.message}</p>}
                         </div>
-                        {
-                            errors.email && (
-                                <p style={{ color: 'red' }}>{errors.email.message}</p>
-                            )
-                        }
 
-                        {/* Phone number field */}
-                        <div>
+                        <div className='mb-4'>
                             <input
                                 type="tel"
                                 placeholder='Phone Number'
-                                className='w-[300px] px-3 py-2 border bg-gray-100 rounded-lg placeholder-gray-500 mt-4 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                                    errors.phone ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                }`}
                                 {...register("phone", {
                                     required: "Phone number is required",
                                     pattern: {
                                         value: /^[6-9][0-9]{9}$/,
-                                        message: "Phone number must start with 6, 7, 8, or 9 and be exactly 10 digits"
+                                        message: "Phone number must be exactly 10 digits"
                                     }
                                 })}
                             />
+                            {errors.phone && <p className='mt-1 text-xs text-red-600'>{errors.phone.message}</p>}
                         </div>
 
-                        {
-                            errors.phone && (
-                                <p style={{ color: 'red' }}>{errors.phone.message}</p>
-                            )
-                        }
-
-
-                        {/* Password field*/}
-
-                        <div>
+                        <div className='mb-6'>
                             <input
                                 type="password"
                                 placeholder='Password'
-                                className='w-[300px] px-3 py-2 border bg-gray-100 rounded-lg placeholder-gray-500 mt-4 focus:outline-none focus:ring-2 focus:ring-green-500'
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                                    errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                }`}
                                 {...register("password", {
-                                    required: "Password is Mandatory", minLength: {
-                                        value: 8, message: "Password must be of atleast 8 characters long"
+                                    required: "Password is required",
+                                    minLength: {
+                                        value: 8,
+                                        message: "Password must be at least 8 characters long"
                                     }
                                 })}
                             />
+                            {errors.password && <p className='mt-1 text-xs text-red-600'>{errors.password.message}</p>}
                         </div>
 
-                        {
-                            errors.password && (
-                                <p style={{ color: 'red' }}>{errors.password.message}</p>
-                            )
-                        }
-
-                    </div>
-                    <div disabled={isLoading}>
-                        <button className='w-[300px] px-3 py-2 border rounded-lg bg-green-500 text-white font-semibold mt-6 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500'>
-                            {isLoading ? "Loading..." : "Sign Up"}
+                        <button
+                            type='submit'
+                            disabled={isLoading}
+                            className='h-12 px-4 text-white bg-green-600 font-bold rounded-lg w-full mb-4 hover:bg-green-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed'
+                        >
+                            {isLoading ? (
+                                <div className='flex items-center justify-center gap-2'>
+                                    <Loader2 className='w-5 h-5 animate-spin' />
+                                    <span>Creating account...</span>
+                                </div>
+                            ) : (
+                                'Sign Up'
+                            )}
                         </button>
-                    </div>
-                    <div className='mt-4'>
-                        <p className='text-gray-600'>Already have an account?
-                            <NavLink to="/signin" className="text-green-500 font-semibold"> Sign In</NavLink>
+                        
+                        <p className='text-center text-gray-600'>
+                            Already have an account?
+                            <NavLink to="/signin" className="text-green-600 font-semibold hover:underline ml-1">
+                                Sign In
+                            </NavLink>
                         </p>
-
-                    </div>
-
-                </form>
+                    </form>
+                </div>
             </div>
-
         </div>
+    );
+};
 
-    )
-}
-
-
-export default Signup
+export default Signup;

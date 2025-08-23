@@ -1,5 +1,4 @@
-// pages/admin/AppointmentHistoryAdmin.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import AppointmentCard from '../../components/doctorDashboardComponents/AppointmentCard'
 import AxiosInstances from '../../apiManager/index'
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +15,8 @@ const AppointmentHistoryAdmin = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
+  const listRef = useRef(null);
+
 
   const fetchAppointments = async () => {
     try {
@@ -71,87 +72,93 @@ const AppointmentHistoryAdmin = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-6">
-      <div className="sticky top-6 z-30 bg-gray-50 pt-4 pb-3 shadow-sm space-y-4">
-  {/* Header and Export */}
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 px-2">
-    <div>
-      <h1 className="text-2xl sm:text-3xl font-bold">Admin Appointment History</h1>
-      <p className="text-gray-500 text-sm sm:text-base">
-        Monitor all appointments across doctors and patients
-      </p>
-    </div>
-    <button
-      onClick={exportExcel}
-      className="mt-2 sm:mt-0 px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base rounded shadow flex items-center gap-1"
-    >
-      <Download className="h-4 w-4" />
-      Export
-    </button>
-  </div>
+    <div className="max-w-7xl mx-auto p-2 space-y-6">
+      <div className="sticky top-0 z-30 bg-white pt-6 pb-4 shadow-md space-y-6 border-b border-gray-200">
+        {/* Header and Export */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Admin Appointment History</h1>
+            <p className="text-gray-500 text-sm sm:text-base">
+              Monitor all appointments across doctors and patients
+            </p>
+          </div>
+          <button
+            onClick={exportExcel}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow"
+          >
+            <Download className="h-5 w-5" />
+            Export
+          </button>
+        </div>
 
-  {/* Search & Date */}
-  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 px-2">
-    <div className="col-span-1 md:col-span-2">
-      <input
-        type="text"
-        placeholder="Search doctor or patient..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full px-3 py-2 text-sm border rounded"
-      />
-    </div>
-    <div>
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        className="w-full px-2 py-2 text-sm border rounded"
-      />
-    </div>
-    <div>
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        className="w-full px-2 py-2 text-sm border rounded"
-      />
-    </div>
-  </div>
+        {/* Search & Date */}
+        <div className="flex flex-col lg:flex-row lg:items-end gap-4 px-4">
+          <div className="w-full lg:flex-1">
+            <input
+              type="text"
+              placeholder="Search doctor or patient..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="w-full sm:w-auto">
+            <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="w-full sm:w-auto">
+            <label className="block text-xs text-gray-500 mb-1">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
 
-  {/* Status Filters */}
-  <div className="flex flex-wrap gap-3 px-2 text-sm">
-    {['Completed', 'Confirmed', 'Cancelled'].map((s) => (
-      <label key={s} className="inline-flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={statusFilter.includes(s)}
-          onChange={(e) =>
-            setStatusFilter((prev) =>
-              e.target.checked ? [...prev, s] : prev.filter((x) => x !== s)
-            )
-          }
-        />
-        <span>{s}</span>
-      </label>
-    ))}
-    <button
-      onClick={() => {
-        setStatusFilter([]);
-        setSearchTerm('');
-        setStartDate(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
-        setEndDate(format(new Date(), 'yyyy-MM-dd'));
-      }}
-      className="text-blue-600 underline"
-    >
-      Clear Filters
-    </button>
-  </div>
-</div>
+        {/* Status Filters */}
+        <div className="flex flex-wrap items-center gap-4 px-4 text-sm">
+          {['Completed', 'Confirmed', 'Cancelled'].map((s) => (
+            <label key={s} className="flex items-center gap-2 text-gray-700">
+              <input
+                type="checkbox"
+                checked={statusFilter.includes(s)}
+                onChange={(e) =>
+                  setStatusFilter((prev) =>
+                    e.target.checked ? [...prev, s] : prev.filter((x) => x !== s)
+                  )
+                }
+                className="accent-blue-600"
+              />
+              {s}
+            </label>
+          ))}
+          <button
+            onClick={() => {
+              setStatusFilter([]);
+              setSearchTerm('');
+              setStartDate(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
+              setEndDate(format(new Date(), 'yyyy-MM-dd'));
+            }}
+            className="ml-auto text-sm text-blue-600 hover:underline"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
 
 
 
-      <div className="grid gap-4">
+
+
+
+      <div className="grid gap-4 " ref={listRef} >
         {appointments.length === 0 ? (
           <div className="text-center text-gray-600 py-6">
             No appointments found.
@@ -184,7 +191,10 @@ const AppointmentHistoryAdmin = () => {
           {Array.from({ length: totalPages }, (_, idx) => (
             <button
               key={idx}
-              onClick={() => setPage(idx + 1)}
+              onClick={() => {
+                setPage(idx + 1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-3 py-1 border rounded ${idx + 1 === page ? 'bg-blue-600 text-white' : ''
                 }`}
             >

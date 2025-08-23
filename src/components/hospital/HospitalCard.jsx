@@ -8,13 +8,13 @@ const HospitalCard = ({ id, name, imageUrl, location, doctorCount }) => {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm
      hover:shadow-md transition-all duration-200 p-5 text-center flex flex-col
-     items-center w-full h-full">
+     items-center w-full h-full hover:cursor-pointer" onClick={() => navigate(`/hospitals/${id}`)}> 
 
       {/* Image */}
       <img
         src={
           imageUrl
-            ? `${import.meta.env.VITE_BACKEND_URL}${imageUrl[0]}`
+            ? imageUrl
             : '/default-hospital.png'
 
             
@@ -24,7 +24,7 @@ const HospitalCard = ({ id, name, imageUrl, location, doctorCount }) => {
           e.target.src = '/default-hospital.png';
         }}
         alt={name}
-        className="w-70 h-40 rounded-md object-cover border-2 border-blue-100 mb-3"
+        className="w-80 h-50 rounded-md object-cover border-2 border-blue-100 mb-3"
       />
 
 

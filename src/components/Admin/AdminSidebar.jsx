@@ -1,26 +1,22 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  User,
-  CalendarCheck,
-  Clock,
   X,
-  Menu,
-  History,
-  XCircle,
-  ChevronDown,
-  ChevronRight,
-  Home
+  Home,
+  ClipboardList,
+  Users,
+  Building2,
+  CalendarClock,
+  Star,
+  User,
+  ChartNoAxesCombined
 } from 'lucide-react';
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
-  const [isHistoryOpen, setIsHistoryOpen] = useState(true); // Controls collapse
-
   const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-2 py-3 rounded-lg transition-all duration-200 group ${
-      isActive
-        ? ' shadow transform scale-[1.02]'
-        : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-md hover:transform hover:scale-[1.01] font-medium'
+    `flex items-center gap-3 px-2 py-3 rounded-lg transition-all duration-200 group ${isActive
+      ? 'shadow transform scale-[1.02]'
+      : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-md hover:transform hover:scale-[1.01] font-medium'
     }`;
 
   return (
@@ -49,6 +45,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
             <button
               onClick={() => setIsOpen(false)}
               className="p-2 rounded-lg hover:bg-gray-100"
+              aria-label="Close sidebar"
             >
               <X size={20} className="text-gray-600" />
             </button>
@@ -58,8 +55,8 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
               <User className="text-white" size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Patient Panel</h2>
-              <p className="text-sm text-gray-600">Healthcare Dashboard</p>
+              <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
+              <p className="text-sm text-gray-600">QuickMediLink Dashboard</p>
             </div>
           </div>
         </div>
@@ -69,61 +66,73 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Main Menu
           </h3>
-          {/* Home */}
-          <div className="mt-6 " onClick={() => setIsOpen(false)}>
-            <NavLink to="/admin/dashboard/analytics" className={linkClass}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center ">
-                <Home size={18} />
-              </div>
-              Dashboard
-            </NavLink>
-          </div>
-         
 
-          {/* Profile */}
-          <div className="" onClick={() => setIsOpen(false)}>
-            <NavLink to="/admin/dashboard/manage-entities" className={linkClass}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
-                <User size={18} />
-              </div>
-              Pending Doctors/Hospitals
-            </NavLink>
-          </div>
+          {/* Dashboard */}
+          <div className="space-y-2">
+          <NavLink to="/admin/home" className={linkClass}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
+              <Home size={18} />
+            </div>
+            Home
+          </NavLink>
+          <NavLink to="/admin/dashboard/analytics" className={linkClass}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
+              <ChartNoAxesCombined size={18} />
+            </div>
+            Analytics
+          </NavLink>
 
-          <div className="" onClick={() => setIsOpen(false)}>
-            <NavLink to="/admin/dashboard/allusers" className={linkClass}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
-                <User size={18} />
-              </div>
-              All Users
-            </NavLink>
-          </div>
 
-          <div className="" onClick={() => setIsOpen(false)}>
-            <NavLink to="/admin/dashboard/hospital-list" className={linkClass}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
-                <User size={18} />
-              </div>
-              Add/Update Hospital
-            </NavLink>
-          </div>
 
-          <div className="" onClick={() => setIsOpen(false)}>
-            <NavLink to="/admin/dashboard/appointment-history" className={linkClass}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
-                <User size={18} />
-              </div>
-              Appointment History
-            </NavLink>
-          </div>
-          
-        </nav>
+          <NavLink to="/admin/dashboard/manage-entities" className={linkClass}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-yellow-100 to-amber-100 flex items-center justify-center">
+              <ClipboardList size={18} />
+            </div>
+            Pending Doctors/Hospitals
+          </NavLink>
 
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
-          <p className="text-xs text-gray-500 text-center">© 2024 Healthcare System</p>
+
+
+          <NavLink to="/admin/dashboard/allusers" className={linkClass}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+              <Users size={18} />
+            </div>
+            All Users
+          </NavLink>
+
+
+
+          <NavLink to="/admin/dashboard/hospital-list" className={linkClass}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-green-100 to-emerald-100 flex items-center justify-center">
+              <Building2 size={18} />
+            </div>
+            Add/Update Hospital
+          </NavLink>
+
+
+
+          <NavLink to="/admin/dashboard/appointment-history" className={linkClass}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-100 to-violet-100 flex items-center justify-center">
+              <CalendarClock size={18} />
+            </div>
+            Appointment History
+          </NavLink>
+
+
+          <NavLink to="/admin/dashboard/reviews" className={linkClass}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-100 to-rose-100 flex items-center justify-center">
+              <Star size={18} />
+            </div>
+            All Reviews
+          </NavLink>
         </div>
-      </aside>
+      </nav>
+
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
+        <p className="text-xs text-gray-500 text-center">© 2025 QuickMediLink</p>
+      </div>
+    </aside >
     </>
   );
 };

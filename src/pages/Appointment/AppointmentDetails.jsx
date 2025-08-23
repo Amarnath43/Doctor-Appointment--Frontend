@@ -1,237 +1,205 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AxiosInstances from '../../apiManager';
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  MapPin,
-  DollarSign,
-  Phone,
-  Mail,
-  User
-} from 'lucide-react';
 import toast from 'react-hot-toast';
+import {
+  ArrowLeft, Calendar, Clock, MapPin, DollarSign, User, AlertTriangle, RefreshCw, X
+} from 'lucide-react';
+import ConfirmationModal from '../../components/ConfirmationModal'
+import { makePublicUrlFromKey } from '../../utils/s3PublicUrl';
+
+// Helper to fetch data
+const fetchAppointment = async (appointmentId) => {
+  const res = await AxiosInstances.get(`/appointments/${appointmentId}`);
+  return res.data.appointment;
+};
+
+// Reusable component for info sections
+const InfoCard = ({ title, icon: Icon, children }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+    <div className="flex items-center gap-3 mb-4">
+      <Icon className="w-6 h-6 text-indigo-500" />
+      <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+    </div>
+    <div className="space-y-4">{children}</div>
+  </div>
+);
+
+// Reusable component for individual details
+const DetailItem = ({ label, value, children }) => (
+  <div>
+    <p className="text-sm font-medium text-gray-500">{label}</p>
+    <div className="mt-1 text-base text-gray-800 font-semibold">{children || value}</div>
+  </div>
+);
 
 const AppointmentDetails = () => {
   const navigate = useNavigate();
-
   const { appointmentId } = useParams();
-  const [appt, setAppt] = useState(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const appts = async () => {
-      let res = await AxiosInstances.get(`/appointments/${appointmentId}`);
-      setAppt(res.data.appointment)
-      console.log(res.data.appointment)
-    }
+  // State for the confirmation modal
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
-    appts();
+  // Fetching data with React Query
+  const { data: appt, isLoading, isError } = useQuery({
+    queryKey: ['appointment', appointmentId],
+    queryFn: () => fetchAppointment(appointmentId),
+    enabled: !!appointmentId,
+  });
 
-
-  }, [appointmentId]);
-
-  
-
-
-  if (!appt) return <p>Loading…</p>;
   const isInactive = appt?.status === 'Cancelled' || appt?.status === 'Completed';
 
-   const handleCancel = async (id) => {
-  try {
-    await AxiosInstances.patch(`/appointments/cancel/${id}`);
-    toast.success('Appointment cancelled');
-    // refresh list
-  } catch (err) {
-    toast.error('Failed to cancel appointment');
-  }
-};
+  const handleCancel = async () => {
+    setIsCancelling(true);
+    try {
+      await AxiosInstances.patch(`/appointments/cancel/${appointmentId}`);
+      toast.success('Appointment cancelled successfully');
+      // Invalidate the query to refetch fresh data
+      queryClient.invalidateQueries(['appointment', appointmentId]);
+    } catch (err) {
+      toast.error('Failed to cancel appointment. Please try again.');
+    } finally {
+      setIsCancelling(false);
+      setModalOpen(false);
+    }
+  };
 
-const handleReschedule = (id) => {
-  // navigate to reschedule form
-  navigate(`/reschedule/${id}`);
-};
+  const handleReschedule = () => {
+    const path = `/doctor/${appt.doctorId._id}?rescheduleFrom=${appointmentId}`;
+    navigate(path);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+
+  if (isError || !appt) {
+    return <div className="flex justify-center items-center h-screen">Error loading appointment details.</div>;
+  }
+  
+  // Helper for status styling
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case 'Completed': return 'bg-green-100 text-green-800';
+      case 'Cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+  if(!appt)
+  {
+    return <p>Loading...puuu</p>
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
-          >
-            <ArrowLeft className="w-5 h-5 mr-1" />
-            Back
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Appointment Details
-            </h1>
-            <p className="text-gray-600">
-              ID: {appt._id}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Doctor Information */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <User className="w-5 h-5 mr-2 text-gray-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Doctor Information
-                  </h2>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {appt.doctorId.userId.name}
-                    </h3>
-                    <p className="text-gray-600">
-                      {appt.doctorId.specialization}
-                    </p>
-                  </div>
-                  <hr className="border-gray-200" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex items-center">
-                      <Phone className="w-4 h-4 mr-2 text-gray-500" />
-                      <span className="text-gray-700">
-                        {appt.doctorId.hospital.phoneNumber}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Mail className="w-4 h-4 mr-2 text-gray-500" />
-                      <span className="text-gray-700">
-                        {appt.doctorId.userId.email}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+    <>
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center mb-8">
+            <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-200 mr-4">
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Appointment Details</h1>
+              <p className="text-sm text-gray-500 mt-1">ID: {appt._id}</p>
             </div>
+          </div>
 
-            {/* Appointment Information */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <Calendar className="w-5 h-5 mr-2 text-gray-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Appointment Information
-                  </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Column */}
+            <div className="lg:col-span-2 space-y-6">
+              <InfoCard title="Doctor Information" icon={User}>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={makePublicUrlFromKey(appt.doctorId?.userId?.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(appt.doctorId?.userId?.name)}&background=random`}
+                    alt={appt.doctorId?.userId?.name}
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{appt.doctorId?.userId?.name}</h3>
+                    <p className="text-indigo-600 font-medium">{appt.doctorId?.specialization}</p>
+                  </div>
                 </div>
+              </InfoCard>
+
+              <InfoCard title="Appointment Details" icon={Calendar}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Date & Time */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Date & Time
-                    </h4>
-                    <p className="text-gray-700">{appt.date.split('T')[0]}</p>
-                    <p className="text-gray-700">{appt.slot}</p>
-                  </div>
-                  {/* Type */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Payment Mode
-                    </h4>
-                    <p className="text-gray-700">
-                      {appt.paymentMode}
-                    </p>
-                  </div>
-                  {/* Location */}
+                  <DetailItem label="Date & Time">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={16} className="text-gray-400" />
+                      <span>{new Date(appt?.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Clock size={16} className="text-gray-400" />
+                      <span>{appt?.slot}</span>
+                    </div>
+                  </DetailItem>
+                  <DetailItem label="Payment Mode" value={appt?.paymentMode} />
                   <div className="sm:col-span-2">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Location
-                    </h4>
-                    <p className="text-gray-700">
-                      {appt.doctorId.hospital.location}
-                    </p>
-                  </div>
-                  {/* Notes */}
-                  <div className="sm:col-span-2">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Google Maps Link
-                    </h4>
-                    <a className="text-blue-700" href={appt.doctorId.hospital.googleMapsLink} target='_blank'>Click here</a>
+                    <DetailItem label="Location">
+                      <a href={appt.doctorId?.hospital?.googleMapsLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-600 hover:underline">
+                        <MapPin size={16} />
+                        <span>{appt.doctorId?.hospital?.location}</span>
+                      </a>
+                    </DetailItem>
                   </div>
                 </div>
-              </div>
+              </InfoCard>
             </div>
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Status */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="mb-4 font-semibold text-gray-900">Status</h3>
-              <div className="flex items-center">
-                <div className={`w-3 h-3 ${appt.status === "cancelled" ? "bg-red-500" : "bg-green-500"} rounded-full mr-2`} />
-                <span className={`font-semibold ${appt.status === "cancelled" ? "text-red-500" : "text-green-500"}`}>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-base font-bold text-gray-800 mb-3">Status</h3>
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${getStatusStyles(appt.status)}`}>
                   {appt.status}
-                </span>
+                </div>
               </div>
-            </div>
 
-            {/* Fee Information */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center mb-4">
-                <DollarSign className="w-5 h-5 mr-2 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Fee Information
-                </h3>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Consultation Fee:
-                  </span>
-                  <span className="font-semibold">
-                    {appt.doctorId.fee}
-                  </span>
+              <InfoCard title="Payment Summary" icon={DollarSign}>
+                <div className="flex justify-between text-gray-600">
+                  <span>Consultation Fee</span>
+                  <span className="font-medium text-gray-800">₹{appt.doctorId?.fee}</span>
                 </div>
                 <hr className="border-gray-200" />
-                <div className="flex justify-between font-semibold">
-                  <span>Total:</span>
-                  <span>₹ {appt.doctorId.fee}</span>
+                <div className="flex justify-between font-bold text-gray-900 text-lg">
+                  <span>Total Paid</span>
+                  <span>₹{appt.doctorId?.fee}</span>
                 </div>
-              </div>
+
+              </InfoCard>
+
+              {/* Actions */}
+              {!isInactive && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-3">
+                  <h3 className="text-base font-bold text-gray-800 mb-3">Actions</h3>
+                  <button onClick={handleReschedule} className="w-full flex items-center justify-center gap-2 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition-colors">
+                    <RefreshCw size={16} /> Reschedule
+                  </button>
+                  <button onClick={() => setModalOpen(true)} className="w-full flex items-center justify-center gap-2 py-2.5 border border-red-200 bg-red-50 rounded-lg text-red-700 font-semibold hover:bg-red-100 transition-colors">
+                    <X size={16} /> Cancel Appointment
+                  </button>
+                </div>
+              )}
             </div>
-
-            {/* Actions */}
-            <div className="bg-white rounded-lg shadow p-6 space-y-3">
-              <button
-                className="w-full py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
-                onClick={() => handleReschedule(appointmentId)}
-                disabled={isInactive}
-              >
-                Reschedule Appointment
-              </button>
-
-              <button
-                className="w-full py-2 border border-red-500 rounded-lg text-red-600 hover:bg-red-50"
-                onClick={() => handleCancel(appointmentId)}
-                disabled={isInactive}
-              >
-                Cancel Appointment
-              </button>
-
-              <button
-                className="w-full py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
-                onClick={() => handleAddToCalendar(appointment)}
-                disabled={isInactive}
-              >
-                Add to Calendar
-              </button>
-            </div>
-
           </div>
         </div>
       </div>
-    </div>
+
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        title="Cancel Appointment"
+        message="Are you sure you want to cancel this appointment? This action cannot be undone."
+        onConfirm={handleCancel}
+        onCancel={() => setModalOpen(false)}
+        isConfirming={isCancelling}
+        confirmText="Yes, Cancel"
+        variant="destructive"
+      />
+    </>
   );
 };
 

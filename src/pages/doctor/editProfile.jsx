@@ -1,109 +1,192 @@
-// src/pages/doctor/ProfileSection.jsx
-import React, { useState } from 'react';
-import { toast } from 'react-hot-toast';
-import useUserStore from '../../store/user';
-import EditProfileForm from '../doctor/editProfileForm'
+import { useEffect, useState } from 'react'
+import {
+  User,
+  Mail,
+  Phone,
+  Stethoscope,
+  Calendar,
+  Edit3,
+  MapPin,
+  Home,
+  Activity,
+  IndianRupee
+} from 'lucide-react'
+import EditProfileForm from './editProfileForm'
+import useUserStore from '../../store/user'
+import {makePublicUrlFromKey} from '../../utils/s3PublicUrl'
 
-export default function ProfileSection() {
-  // Pull the flattened doctor object right off your store:
-  const user = useUserStore((s) => s.user);
-  const [isOpen, setIsOpen] = useState(false);
+const DoctorProfile = () => {
+  const { user, setUser } = useUserStore()
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [doctorData, setDoctorData] = useState({})
 
-  const handleEditClick = () => {
-    if (!user) {
-      return toast.error('Profile data is not available.');
+
+ useEffect(() => {
+  const loadProfileImage = async () => {
+    let imageUrl = null
+
+    try {
+      
+        const publicUrl = user.profilePicture
+              ? makePublicUrlFromKey(user.profilePicture) // returns null if invalid
+              : null;
+      
+     
+
+      setDoctorData({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        profilePicture: publicUrl,
+        specialization: user.specialization,
+        experience: user.experience,
+        fee: user.fee,
+        bio: user.bio,
+        hospital: user.hospital || {}
+      })
+    } catch (err) {
+      console.error('Error fetching image URL:', err)
+      // Still set doctor data even if image fetch fails
+      setDoctorData({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        profilePicture: null,
+        specialization: user.specialization,
+        experience: user.experience,
+        fee: user.fee,
+        bio: user.bio,
+        hospital: user.hospital || {}
+      })
     }
-    setIsOpen(true);
-  };
-
-  if (!user) {
-    return (
-      <div className="max-w-3xl mx-auto p-6">
-        <p className="text-center text-gray-500">Loading profile…</p>
-      </div>
-    );
   }
 
-  // Destructure once for easy use:
-  const {
-    profilePicture,
-    name,
-    email,
-    phone,
-    specialization,
-    experience,
-    fee,
-    bio,
-    hospital,        // object with { name, location, phoneNumber, googleMapsLink }
-  } = user;
+  if (user) {
+    loadProfileImage()
+  }
+}, [user])
+
+
+  const getInitials = (name) => {
+    return name?.split(' ').map(w => w.charAt(0)).join('').slice(0, 2).toUpperCase()
+  }
+
+  const handleEditProfile = () => setIsEditModalOpen(true)
+  const handleCloseModal = () => setIsEditModalOpen(false)
+
+  const handleProfileUpdated = (updatedUser) => {
+    setUser(updatedUser)
+  }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-bold">My Profile</h1>
+    <div className="h-[calc(100vh-140px)] bg-gray-50 relative">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Doctor Dashboard
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">Manage your profile and hospital info</p>
+          </div>
+          <button
+            onClick={handleEditProfile}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <Edit3 className="w-4 h-4" />
+            Edit Profile
+          </button>
+        </div>
+      </div>
 
-      <div className="flex items-center gap-4">
-       <img
-          src={profilePicture || '/default-avatar.png'}
-          alt="My avatar"
-         className="h-40 w-40 rounded-full object-cover border"
-        />
-      
-     </div>
-
-      <div className="space-y-2">
-        <div><strong>Name:</strong> {name}</div>
-        <div><strong>Email:</strong> {email}</div>
-        <div><strong>Phone:</strong> {phone}</div>
-        <div><strong>Specialization:</strong> {specialization}</div>
-        <div><strong>Experience:</strong> {experience} years</div>
-        <div><strong>Consultation Fee:</strong> ₹{fee}</div>
-        <div><strong>Bio:</strong> <span>{bio}</span></div>
-
-        {hospital && (
-          <div className="mt-2 space-y-1">
-            <div><strong>Hospital:</strong> {hospital.name}</div>
-            <div><strong>Location:</strong> {hospital.location}</div>
-            <div><strong>Contact:</strong> {hospital.phoneNumber}</div>
-            {hospital.googleMapsLink && (
-              <div>
-                <strong>Map:</strong>{' '}
-                <a
-                  href={hospital.googleMapsLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  View on Google Maps
-                </a>
+      {/* Content */}
+      <div className="p-4 md:p-6 max-w-7xl mx-auto">
+        {/* Profile Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 mb-6 shadow-xl">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+            {doctorData.profilePicture ? (
+              <img
+                src={doctorData.profilePicture}
+                alt="Doctor"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white object-cover shadow-lg"
+              />
+            ) : (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border-2 flex items-center justify-center shadow-lg">
+                <span className="text-xl font-bold text-gray-700">{getInitials(doctorData.name)}</span>
               </div>
             )}
+            <div className="text-white">
+              <h2 className="text-2xl sm:text-3xl font-bold">{doctorData.name}</h2>
+              <p className="text-blue-100 flex items-center justify-center sm:justify-start gap-2 mt-2 text-base">
+                <Mail className="w-4 h-4" />
+                {doctorData.email}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Details Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <InfoCard icon={Phone} label="Phone Number" value={doctorData.phone} color="blue" />
+          <InfoCard icon={Stethoscope} label="Specialization" value={doctorData.specialization} color="green" />
+          <InfoCard icon={Calendar} label="Experience" value={`${doctorData.experience} yrs`} color="purple" />
+          <InfoCard icon={IndianRupee} label="Consultation Fee" value={`₹${doctorData.fee}`} color="red" />
+          <InfoCard icon={Activity} label="Bio" value={doctorData.bio} color="orange" />
+        </div>
+
+        {/* Hospital Section */}
+        {doctorData.hospital && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">Hospital Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <InfoCard icon={Home} label="Hospital Name" value={doctorData.hospital.name} color="cyan" />
+              <InfoCard icon={MapPin} label="Location" value={doctorData.hospital.location} color="yellow" />
+              <InfoCard icon={Phone} label="Contact" value={doctorData.hospital.phoneNumber} color="blue" />
+              {doctorData.hospital.googleMapsLink && (
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 col-span-1 sm:col-span-2 lg:col-span-3">
+                  <h4 className="text-sm font-medium text-gray-600 mb-1">Google Maps</h4>
+                  <a
+                    href={doctorData.hospital.googleMapsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline break-all text-sm"
+                  >
+                    {doctorData.hospital.googleMapsLink}
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      <button
-        onClick={handleEditClick}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Edit Profile
-      </button>
 
-      {isOpen && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black bg-opacity-50 overflow-y-auto"
-    aria-modal="true"
-    role="dialog"
-  >
-    <div className="bg-white rounded-lg shadow-xl w-full max-w-md sm:max-w-lg md:max-w-xl p-6">
-      <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
-      <EditProfileForm
-        initialData={user}
-        onClose={() => setIsOpen(false)}
-      />
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <EditProfileForm
+          isOpen={isEditModalOpen}
+          onClose={handleCloseModal}
+          initialData={doctorData}
+          onProfileUpdated={handleProfileUpdated}
+        />
+      )}
+    </div>
+  )
+}
+
+// Reusable Card Component
+const InfoCard = ({ icon: Icon, label, value, color = 'blue' }) => (
+  <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100">
+    <div className="flex items-center gap-4">
+      <div className={`w-12 h-12 bg-${color}-100 rounded-xl flex items-center justify-center`}>
+        <Icon className={`w-6 h-6 text-${color}-600`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={`text-xs font-semibold text-${color}-600 uppercase tracking-wide mb-1`}>{label}</p>
+        <p className="text-sm font-bold text-gray-900">{value || '-'}</p>
+      </div>
     </div>
   </div>
-)}
+)
 
-    </div>
-  );
-}
+export default DoctorProfile

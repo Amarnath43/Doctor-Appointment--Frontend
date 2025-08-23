@@ -143,7 +143,7 @@ export default function AppointmentHistory() {
     <div className="container mx-auto p-4 space-y-6 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Appointment History</h1>
+          <h1 className="text-2xl font-bold">Appointment History</h1>
           <p className="text-gray-500">Track and manage your appointment records</p>
         </div>
         <div className="flex flex-wrap gap-2">
