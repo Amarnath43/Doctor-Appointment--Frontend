@@ -32,7 +32,7 @@ import ResetPasswordPage from '../pages/ResetPasswordPage'
 import VerifyOtpPage from '../pages/VerifyOtpPage';
 import VerifyDoctorOtp from '../pages/VerifyDoctorOTP';
 import DoctorHomePage from '../pages/doctor/DoctorHomePage';
-import AdminHomepage from '../pages/Admin/AdminHomepage';
+import AdminHomepage from '../pages/Admin/AdminHomePage';
 import DoctorReviewsPanel from '../pages/doctor/DoctorReviewsPanel';
 import AdminReviewsPage from '../pages/Admin/AdminReviewsPage';
 
