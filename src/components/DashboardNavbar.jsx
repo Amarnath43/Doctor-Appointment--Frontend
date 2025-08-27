@@ -84,7 +84,7 @@ const DashboardNavbar = ({ onSidebarToggle }) => {
   ];
 
   return (
-    <div className="w-full flex justify-between items-center px-4 md:px-10 py-7 bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40 ">
+    <div className="w-full flex justify-between items-center px-4 md:px-10 py-7 bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30 ">
       {/* Left: Hamburger + Logo + Title */}
       <div className="flex items-center gap-3">
         {/* Sidebar toggle (mobile) */}
@@ -98,7 +98,7 @@ const DashboardNavbar = ({ onSidebarToggle }) => {
 
         {/* Logo + Title */}
         <div className="flex items-center gap-2">
-          <img src="/xy.png" alt="Quick MediLink" className="h-10 w-auto" />
+          <img src="/xy.png" alt="Quick MediLink" className="h-10 w-auto" onClick={()=>navigate('/')}/>
 
         </div>
       </div>

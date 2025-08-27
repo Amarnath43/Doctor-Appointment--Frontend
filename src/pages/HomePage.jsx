@@ -1,4 +1,4 @@
-import React from 'react'
+import React,{useEffect} from 'react'
 import NavBar from '../components/NavBar'
 import HeroSection from '../components/HeroSection'
 import FindBySpeciality from '../components/FindBySpeciality'
@@ -27,18 +27,25 @@ const testimonials = [
     rating: 5
   }
 ];
-const HomePage = () => {
-  const StarRating = ({ rating }) => {
-  return (
-    <div className="flex text-yellow-500">
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star key={i} className={`w-4 h-4 ${i < rating ? 'fill-yellow-500' : 'text-gray-300'}`} />
-      ))}
-    </div>
-  );
-};
 
-const navigate=useNavigate();
+const HomePage = () => {
+
+
+  const StarRating = ({ rating }) => {
+    return (
+      <div className="flex text-yellow-500">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star key={i} className={`w-4 h-4 ${i < rating ? 'fill-yellow-500' : 'text-gray-300'}`} />
+        ))}
+      </div>
+    );
+  };
+
+  const navigate = useNavigate();
+
+  
+
+
   return (
     <div className='px-4 sm:px-20 pt-3 '>
       <NavBar/>

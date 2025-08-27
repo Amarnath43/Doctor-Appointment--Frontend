@@ -64,9 +64,9 @@ const NavBar = () => {
     });
   };
   const handleLogout = () => {
+    handleCloseModal();
     clearUser();
     removeToken();
-    handleCloseModal();
     navigate('/');
   };
 
@@ -133,6 +133,7 @@ const NavBar = () => {
             src="/xy.png"
             alt="Quick MediLink Logo"
             className="object-contain w-full h-full"
+            onClick={()=>navigate('/')}
           />
         </div>
       </div>

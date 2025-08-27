@@ -25,9 +25,10 @@ export default function AppointmentHistory() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // 👈 New state
   const [preset, setPreset] = useState('7D');
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = useState(format(subDays(new Date(), -7), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [statusFilter, setStatusFilter] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -50,43 +51,36 @@ export default function AppointmentHistory() {
     setCurrentPage(1);
   };
 
-  const fetchAppointments = async () => {
-  setLoading(true);
-  try {
-    const res = await AxiosInstances.get('/doctor/appointments', {
-      params: {
-        page: currentPage,
-        limit: 10,
-        search: searchTerm,
-        startDate,
-        endDate,
-        status: statusFilter.join(',')
-      }
-    });
-
-    console.log('✅ Appointments Response:', res.data);
-
-    setAppointments(res.data.data); // how many items here?
-    setTotalPages(res.data.pagination?.totalPages || 1);
-  } catch (err) {
-    toast.error('Failed to load appointments');
-  } finally {
-    setLoading(false);
-  }
-};
-
+  const fetchAppointments = async (page, sTerm, start, end, status) => {
+    setLoading(true);
+    try {
+      const res = await AxiosInstances.get('/doctor/appointments', {
+        params: {
+          page: page,
+          limit: 10,
+          search: sTerm,
+          startDate: start,
+          endDate: end,
+          status: status.join(',')
+        }
+      });
+      console.log('✅ Appointments Response:', res.data);
+      setAppointments(res.data.data);
+      setTotalPages(res.data.pagination?.totalPages || 1);
+    } catch (err) {
+      toast.error('Failed to load appointments');
+    } finally {
+      setLoading(false);
+      setIsInitialLoading(false); // 👈 Set to false only after the first fetch
+    }
+  };
 
   useEffect(() => {
-    fetchAppointments();
-  }, [currentPage, startDate, endDate, statusFilter]);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setCurrentPage(1);
-      fetchAppointments();
+    const timeoutId = setTimeout(() => {
+      fetchAppointments(currentPage, searchTerm, startDate, endDate, statusFilter);
     }, 400);
-    return () => clearTimeout(timeout);
-  }, [searchTerm]);
+    return () => clearTimeout(timeoutId);
+  }, [currentPage, searchTerm, startDate, endDate, statusFilter]);
 
   const goTo = (p) => {
     if (p < 1 || p > totalPages) return;
@@ -99,7 +93,7 @@ export default function AppointmentHistory() {
       'S.No': idx + 1,
       'Date': format(new Date(a.date), 'yyyy-MM-dd'),
       'Time': a.time,
-      'Patient Name': a.patient,
+      'Patient Name': a.patientName,
       'Status': a.status,
       'Mode of Payment': a.modeOfPayment,
     }));
@@ -229,7 +223,7 @@ export default function AppointmentHistory() {
           <h2 className="text-lg font-semibold">Appointments</h2>
         </div>
         <div className="p-4">
-          {loading ? (
+          {isInitialLoading ? ( // 👈 Use the new state for the first load
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
@@ -279,7 +273,6 @@ export default function AppointmentHistory() {
                     </div>
                   )}
                 </div>
-
               </div>
             ))
           ) : (

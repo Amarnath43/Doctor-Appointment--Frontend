@@ -1,74 +1,98 @@
 import React, { useEffect, useState, useRef } from 'react';
-import AppointmentCard from '../../components/doctorDashboardComponents/AppointmentCard'
-import AxiosInstances from '../../apiManager/index'
+import AppointmentCard from '../../components/doctorDashboardComponents/AppointmentCard';
+import AxiosInstances from '../../apiManager/index';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
-import { Search, Filter, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+
+const PAGE_SIZE = 10; // keep in sync with backend
 
 const AppointmentHistoryAdmin = () => {
   const [appointments, setAppointments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState([]);
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = useState(format(subDays(new Date(), -7), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd')); // ✅ fixed
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const listRef = useRef(null);
+  const lastScrolledPageRef = useRef(page);
 
-
-  const fetchAppointments = async () => {
-    try {
-      const res = await AxiosInstances.get('/admin/appointment-history', {
-        params: {
-          page,
-          startDate,
-          endDate,
-          status: statusFilter.join(','),
-          search: searchTerm
-        }
-      });
-
-      setAppointments(res.data.data);
-      console.log(res.data.data)
-      setTotalPages(res.data.pagination.totalPages);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      console.error('Failed to fetch appointments', err);
-    }
-  };
-
+  // reset to page 1 when any filter (except page) changes
   useEffect(() => {
     setPage(1);
   }, [searchTerm, startDate, endDate, statusFilter]);
 
   useEffect(() => {
-    fetchAppointments();
-  }, [page, startDate, endDate, statusFilter]);
+    let aborted = false;
+    const controller = new AbortController();
 
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchAppointments();
-    }, 500);
-    return () => clearTimeout(delay);
-  }, [searchTerm]);
+    // debounce typing for 400ms
+    const t = setTimeout(async () => {
+      try {
+        const res = await AxiosInstances.get('/admin/appointment-history', {
+          params: {
+            page,
+            startDate,
+            endDate,
+            status: statusFilter.join(','),
+            search: searchTerm,
+            pageSize: PAGE_SIZE,
+          },
+          signal: controller.signal, // axios >=1 supports AbortController
+        });
+
+        if (aborted) return;
+        setAppointments(res.data.data || []);
+        setTotalPages(res.data.pagination?.totalPages ?? 1);
+
+        // Only scroll when page changes (not on every filter change fetch)
+        if (lastScrolledPageRef.current !== page) {
+          lastScrolledPageRef.current = page;
+          // Scroll list into view (sticky header safe)
+          listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Or: window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error('Failed to fetch appointments', err);
+      }
+    }, 400);
+
+    return () => {
+      aborted = true;
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, [page, startDate, endDate, statusFilter, searchTerm]);
 
   const exportExcel = () => {
     const rows = appointments.map((a, i) => ({
-      'S.No': i + 1,
+      'S.No': (page - 1) * PAGE_SIZE + i + 1, // ✅ serial continuous across pages
       'Date': a.date,
       'Time': a.time,
       'Patient': a.patientName,
       'Doctor': a.doctorName,
       'Status': a.status,
-      'Payment Mode': a.modeOfPayment
+      'Payment Mode': a.modeOfPayment,
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Appointments');
-    XLSX.writeFile(workbook, `admin_appointments_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Appointments');
+    XLSX.writeFile(wb, `admin_appointments_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
+  const toggleStatus = (s) =>
+    setStatusFilter((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+
+  const clearFilters = () => {
+    setStatusFilter([]);
+    setSearchTerm('');
+    setStartDate(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
+    setEndDate(format(new Date(), 'yyyy-MM-dd')); // ✅ today
   };
 
   return (
@@ -129,61 +153,37 @@ const AppointmentHistoryAdmin = () => {
               <input
                 type="checkbox"
                 checked={statusFilter.includes(s)}
-                onChange={(e) =>
-                  setStatusFilter((prev) =>
-                    e.target.checked ? [...prev, s] : prev.filter((x) => x !== s)
-                  )
-                }
+                onChange={() => toggleStatus(s)}
                 className="accent-blue-600"
               />
               {s}
             </label>
           ))}
-          <button
-            onClick={() => {
-              setStatusFilter([]);
-              setSearchTerm('');
-              setStartDate(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
-              setEndDate(format(new Date(), 'yyyy-MM-dd'));
-            }}
-            className="ml-auto text-sm text-blue-600 hover:underline"
-          >
+          <button onClick={clearFilters} className="ml-auto text-sm text-blue-600 hover:underline">
             Clear Filters
           </button>
         </div>
       </div>
 
-
-
-
-
-
-      <div className="grid gap-4 " ref={listRef} >
+      {/* List */}
+      <div className="grid gap-4" ref={listRef}>
         {appointments.length === 0 ? (
-          <div className="text-center text-gray-600 py-6">
-            No appointments found.
-          </div>
+          <div className="text-center text-gray-600 py-6">No appointments found.</div>
         ) : (
           appointments.map((appt, i) => {
-            // compute the serial number so it continues across pages
-            const serial = (page - 1) * 10 + i + 1;
+            const serial = (page - 1) * PAGE_SIZE + i + 1;
             return (
               <div
                 key={appt.id}
                 onClick={() => navigate(`/appointment/${appt.id}`)}
                 className="cursor-pointer"
               >
-                <AppointmentCard
-                  appointment={appt}
-                  index={serial}
-                  role="admin"
-                />
+                <AppointmentCard appointment={appt} index={serial} role="admin" />
               </div>
             );
           })
         )}
       </div>
-
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -191,12 +191,10 @@ const AppointmentHistoryAdmin = () => {
           {Array.from({ length: totalPages }, (_, idx) => (
             <button
               key={idx}
-              onClick={() => {
-                setPage(idx + 1);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`px-3 py-1 border rounded ${idx + 1 === page ? 'bg-blue-600 text-white' : ''
-                }`}
+              onClick={() => setPage(idx + 1)}
+              className={`px-3 py-1 border rounded ${
+                idx + 1 === page ? 'bg-blue-600 text-white' : ''
+              }`}
             >
               {idx + 1}
             </button>

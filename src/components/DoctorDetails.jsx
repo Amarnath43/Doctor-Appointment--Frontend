@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import AxiosInstances from '../apiManager';
 import toast from 'react-hot-toast';
-import { X, Star, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import ConfirmationModal from '../components/ConfirmationModal';
+import isTokenValid from '../helper/isTokenValid'
 import { formatIST } from '../utils/datetime';
 import { makePublicUrlFromKey } from '../utils/s3PublicUrl';
-import ConfirmationModal from './ConfirmationModal';
+import { renderStars } from '../utils/reviewUtils';
+import ReviewsModal from '../components/ReviewsModal';
+import ReviewCard from '../components/ReviewCard';
 
 const REVIEWS_PREVIEW_LIMIT = 2; // show 2 on page
 const REVIEWS_PAGE_SIZE = 10;    // 10 per page in modal
@@ -25,7 +29,7 @@ const fetchAppointmentById = async (appointmentId) => {
 const fetchDoctorReviewsPreview = async (doctorId) => {
   const params = { page: 1, limit: REVIEWS_PREVIEW_LIMIT };
   const res = await AxiosInstances.get(`/doctors/${doctorId}/reviews`, { params });
-  return res.data; // { items, total, page, limit }
+  return res.data;
 };
 
 const fetchDoctorReviewsPage = async ({ doctorId, pageParam = 1 }) => {
@@ -37,65 +41,7 @@ const fetchDoctorReviewsPage = async ({ doctorId, pageParam = 1 }) => {
   };
 };
 
-/* ---------------------- Responsive Review Card (IMPROVED UI) ---------------------- */
-const ReviewCard = ({ r, renderStars, dateFormat = 'DD MMM YYYY' }) => {
-  const name = r?.user?.name || 'Anonymous';
-  const avatar = makePublicUrlFromKey(r?.user?.profilePicture) || null;
-  const created = r?.createdAt ? formatIST(r.createdAt, dateFormat) : '';
-  const repliedAt = r?.doctor_reply?.repliedAt
-    ? formatIST(r.doctor_reply.repliedAt, 'DD MMM YYYY')
-    : '';
-
-  return (
-    <article className="w-full rounded-xl border border-gray-200 bg-white p-5 transition-shadow duration-300 hover:shadow-lg">
-      <div className="flex items-start justify-between gap-4">
-        {/* Avatar and Name */}
-        <div className="flex min-w-0 items-center gap-4">
-          <img
-            src={avatar}
-            alt={name}
-            className="h-12 w-12 flex-shrink-0 rounded-full object-cover ring-1 ring-gray-100"
-            loading="lazy"
-          />
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-gray-800">{name}</p>
-            <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-              {renderStars(r.rating)}
-              <span className="hidden sm:inline text-gray-300">•</span>
-              <time className="hidden sm:inline shrink-0">{created}</time>
-            </div>
-          </div>
-        </div>
-        {/* Mobile Date */}
-        <time className="sm:hidden text-xs text-gray-500 shrink-0 pt-1">{created}</time>
-      </div>
-
-      {/* Review Text */}
-      {r.comment && (
-        <p className="mt-4 text-gray-700 leading-relaxed whitespace-pre-wrap">
-          {r.comment}
-        </p>
-      )}
-
-      {/* Doctor's Reply */}
-      {r.doctor_reply?.text && (
-        <div className="mt-4 rounded-lg bg-indigo-50/50 p-4 border border-indigo-100">
-          <div className="text-xs font-semibold text-indigo-700">
-            Response from the Doctor
-            <span className="text-indigo-300 font-normal mx-2">•</span>
-            <span className="font-normal text-indigo-600">{repliedAt}</span>
-          </div>
-          <p className="mt-2 text-sm text-gray-800 whitespace-pre-wrap">
-            {r.doctor_reply.text}
-          </p>
-        </div>
-      )}
-    </article>
-  );
-};
-
-
-/* ---------------------- Component (IMPROVED UI) ---------------------- */
+/* ---------------------- Component ---------------------- */
 const DoctorDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,11 +57,9 @@ const DoctorDetails = () => {
 
   // Reviews modal state + refs
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
-  const reviewsScrollRef = useRef(null);
   const reviewsSentinelRef = useRef(null);
 
-
-   const [isConfirming, setIsConfirming] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [modalState, setModalState] = useState({
     isOpen: false,
     title: '',
@@ -147,6 +91,7 @@ const DoctorDetails = () => {
     }
   };
 
+  // only constructs modal content
   const openConfirmationModal = () => {
     if (!selectedSlot) return;
 
@@ -184,6 +129,25 @@ const DoctorDetails = () => {
     }
   };
 
+  const onPrimaryActionClick = () => {
+    if (!selectedSlot) return;
+
+    if (!isTokenValid()) {
+      sessionStorage.setItem(
+        'pendingBooking',
+        JSON.stringify({
+          path: window.location.pathname,
+          date: selectedDate,
+          slot: selectedSlot
+        })
+      );
+      navigate('/signin');
+      return;
+    }
+
+    openConfirmationModal();
+  };
+
   /* ----------- Data: Doctor ----------- */
   const {
     data: doctor,
@@ -201,7 +165,6 @@ const DoctorDetails = () => {
     if (!rescheduleFrom && !navState.selectedDate && availableDates.length && !selectedDate) {
       setSelectedDate(availableDates[0].date);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableDates, rescheduleFrom, navState.selectedDate, selectedDate]);
 
   useEffect(() => {
@@ -263,13 +226,14 @@ const DoctorDetails = () => {
 
   const modalReviews = reviewsInfiniteData?.pages?.flatMap((p) => p.items) || [];
 
+  // infinite scroll
   useEffect(() => {
     if (!reviewsModalOpen || !hasNextReviewsPage) return;
 
-    const rootEl = reviewsScrollRef.current || null;
+    const rootEl = reviewsSentinelRef.current;
     const obs = new IntersectionObserver(
       ([entry]) => entry.isIntersecting && fetchNextReviewsPage(),
-      { root: rootEl, rootMargin: '0px', threshold: 1 }
+      { root: null, rootMargin: '0px', threshold: 1 }
     );
 
     const el = reviewsSentinelRef.current;
@@ -278,32 +242,11 @@ const DoctorDetails = () => {
     return () => obs.disconnect();
   }, [reviewsModalOpen, hasNextReviewsPage, fetchNextReviewsPage]);
 
-  useEffect(() => {
-    if (!reviewsModalOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, [reviewsModalOpen]);
-
   /* ----------- Helpers ----------- */
   const formatDateLabel = (isoDate) =>
     new Date(isoDate)
       .toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
       .toUpperCase();
-
-  const renderStars = (rating) => {
-    const val = Number(rating) || 0;
-    return (
-      <div className="flex items-center">
-        {[1, 2, 3, 4, 5].map((s) => (
-          <Star
-            key={s}
-            className={`w-4 h-4 ${s <= val ? 'text-amber-500 fill-amber-500' : 'text-gray-300'}`}
-          />
-        ))}
-      </div>
-    );
-  };
 
   /* ----------- Booking / Reschedule ----------- */
   const handleBooking = async () => {
@@ -335,7 +278,8 @@ const DoctorDetails = () => {
           date: selectedDate,
           slot: selectedSlot
         }));
-        navigate('/signin');
+
+        navigate('/signin', { state: { flash: { type: 'error', msg: 'Please login to book' } } });
       }
     }
   };
@@ -377,7 +321,7 @@ const DoctorDetails = () => {
     <div className="bg-gray-50 min-h-screen mt-2">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          
+
           {/* Left Column: Doctor Profile */}
           <div className="lg:col-span-1 space-y-8">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
@@ -385,8 +329,8 @@ const DoctorDetails = () => {
                 <div className="relative">
                   <img
                     src={makePublicUrlFromKey(doctor?.userId?.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          doctor.userId?.name || doctor.user?.name || 'Doctor'
-                        )}&background=random`}
+                      doctor.userId?.name || doctor.user?.name || 'Doctor'
+                    )}&background=random`}
                     alt={`Dr. ${doctor?.userId?.name}`}
                     className="h-32 w-32 rounded-full object-cover ring-4 ring-indigo-100"
                   />
@@ -418,7 +362,6 @@ const DoctorDetails = () => {
 
           {/* Right Column: Scheduler & Reviews */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Reschedule Notice */}
             {rescheduleInfo?.appointment?.date && (
               <div className="p-4 bg-amber-50 text-amber-800 border-l-4 border-amber-400 rounded-r-lg">
                 <p>
@@ -431,83 +374,78 @@ const DoctorDetails = () => {
                 </p>
               </div>
             )}
-            
-            {/* Appointment Scheduler */}
+
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">Book an Appointment</h2>
-              
-              {/* Date Picker */}
-              {/* Date Picker */}
-<div className="mt-5">
-  <label className="text-sm font-medium text-gray-700">Select Date</label>
-  <div className="mt-2">
-    {/* --- CHECK ADDED HERE --- */}
-    {availableDates.length > 0 ? (
-      <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        <div className="flex space-x-3">
-          {availableDates.map(({ date }) => (
-            <button
-              key={date}
-              onClick={() => setSelectedDate(date)}
-              className={`flex-shrink-0 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 ${
-                date === selectedDate
-                  ? 'bg-indigo-600 text-white shadow'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-gray-400'
-              }`}
-            >
-              {formatDateLabel(date)}
-            </button>
-          ))}
-        </div>
-      </div>
-    ) : (
-      // --- THIS IS THE NEW EMPTY STATE MESSAGE ---
-      <div className="text-center text-gray-500 bg-gray-50 rounded-lg py-8">
-        <p>No appointment dates are currently available.</p>
-        <p className="text-sm">Please check back later.</p>
-      </div>
-    )}
-  </div>
-</div>
 
-             {/* Slot Picker (with Horizontal Scroll) */}
-<div className="mt-5">
-  <label className="text-sm font-medium text-gray-700">Select Time Slot</label>
-  <div className="mt-2">
-    {selectedSlots.length > 0 ? (
-      <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        <div className="flex space-x-3">
-          {selectedSlots.map(slot => (
-            <button
-              key={slot}
-              onClick={() => setSelectedSlot(slot)}
-              className={`flex-shrink-0 whitespace-nowrap px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 ${
-                slot === selectedSlot
-                  ? 'bg-indigo-600 text-white shadow'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-gray-400'
-              }`}
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
-      </div>
-    ) : (
-      <div className="text-center text-gray-500 bg-gray-50 rounded-lg py-8">
-        <p>No slots available on this day.</p>
-        <p className="text-sm">Please select another date.</p>
-      </div>
-    )}
-  </div>
-</div>
+              {/* Date Picker */}
+              <div className="mt-5">
+                <label className="text-sm font-medium text-gray-700">Select Date</label>
+                <div className="mt-2">
+                  {availableDates.length > 0 ? (
+                    <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      <div className="flex space-x-3">
+                        {availableDates.map(({ date }) => (
+                          <button
+                            key={date}
+                            onClick={() => setSelectedDate(date)}
+                            className={`flex-shrink-0 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 ${
+                              date === selectedDate
+                                ? 'bg-indigo-600 text-white shadow'
+                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-gray-400'
+                            }`}
+                          >
+                            {formatDateLabel(date)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 bg-gray-50 rounded-lg py-8">
+                      <p>No appointment dates are currently available.</p>
+                      <p className="text-sm">Please check back later.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Slot Picker */}
+              <div className="mt-5">
+                <label className="text-sm font-medium text-gray-700">Select Time Slot</label>
+                <div className="mt-2">
+                  {selectedSlots.length > 0 ? (
+                    <div className="w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      <div className="flex space-x-3">
+                        {selectedSlots.map(slot => (
+                          <button
+                            key={slot}
+                            onClick={() => setSelectedSlot(slot)}
+                            className={`flex-shrink-0 whitespace-nowrap px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 ${
+                              slot === selectedSlot
+                                ? 'bg-indigo-600 text-white shadow'
+                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-gray-400'
+                            }`}
+                          >
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 bg-gray-50 rounded-lg py-8">
+                      <p>No slots available on this day.</p>
+                      <p className="text-sm">Please select another date.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Action Button */}
               <div className="mt-8">
                 <button
                   disabled={!selectedSlot}
                   className="w-full text-white font-bold px-6 py-4 rounded-lg text-base transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:-translate-y-0.5"
-                  
-                  onClick={openConfirmationModal} 
+                  onClick={onPrimaryActionClick}
                 >
                   {rescheduleFrom ? 'Confirm Reschedule' : 'Book Appointment'}
                 </button>
@@ -527,7 +465,7 @@ const DoctorDetails = () => {
                   </button>
                 )}
               </div>
-              
+
               {!reviewsPreview.length && (
                 <div className="text-center text-gray-500 bg-gray-50 rounded-lg py-8">
                   <p>No reviews yet for this doctor.</p>
@@ -536,7 +474,7 @@ const DoctorDetails = () => {
 
               <div className="space-y-4">
                 {reviewsPreview.map((r) => (
-                  <ReviewCard key={r._id} r={r} renderStars={renderStars} />
+                  <ReviewCard key={r._id} r={r} />
                 ))}
               </div>
             </div>
@@ -544,148 +482,18 @@ const DoctorDetails = () => {
         </div>
       </div>
 
-      {/* =========================
-            All Reviews Modal
-      ========================== */}
-      {reviewsModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm overflow-y-auto flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="reviews-title"
-          onKeyDown={(e) => e.key === 'Escape' && setReviewsModalOpen(false)}
-          tabIndex={-1}
-        >
-          <div className="relative w-full max-w-5xl h-[90vh] rounded-lg sm:rounded-3xl bg-white shadow-xl flex flex-col">
-            {/* Header */}
-            <div className="flex-shrink-0 sticky top-0 z-20 bg-white/95 backdrop-blur border-b">
-              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <h2 id="reviews-title" className="text-xl font-bold text-gray-900">
-                      All Reviews
-                    </h2>
-                    <div className="mt-1 flex items-center gap-3 text-sm">
-                      <div className="flex items-center gap-1">
-                        <span className="text-2xl font-bold text-gray-900">
-                          {modalReviews.length
-                            ? (
-                                modalReviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) /
-                                modalReviews.length
-                              ).toFixed(1)
-                            : '—'}
-                        </span>
-                        <div className="ml-1 flex items-center [&>svg]:text-yellow-500 [&>svg]:fill-yellow-500">
-                          {renderStars(
-                            modalReviews.length
-                              ? modalReviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) /
-                                modalReviews.length
-                              : 0
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-gray-500">
-                        Based on {modalReviews.length} reviews
-                      </span>
-                    </div>
-
-                    {/* Distribution */}
-                    <div className="mt-3 grid grid-cols-1 gap-1">
-                      {[5, 4, 3, 2, 1].map((stars) => {
-                        const count = modalReviews.filter((r) => Number(r.rating) === stars).length;
-                        const pct = modalReviews.length ? Math.round((count / modalReviews.length) * 100) : 0;
-                        return (
-                          <div key={stars} className="flex items-center gap-2 text-xs">
-                            <span className="w-6 text-right text-gray-700 tabular-nums">{stars}★</span>
-                            <div className="flex-1 h-1.5 rounded-full bg-gray-200 overflow-hidden">
-                              <div
-                                className="h-full rounded-full bg-amber-400 transition-[width] duration-500"
-                                style={{ width: `${pct}%` }}
-                                role="progressbar"
-                                aria-valuenow={pct}
-                                aria-valuemin={0}
-                                aria-valuemax={100}
-                                aria-label={`${pct}% ${stars}-star`}
-                              />
-                            </div>
-                            <span className="w-8 text-right text-gray-600 tabular-nums">{pct}%</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setReviewsModalOpen(false)}
-                    className="p-2 rounded-full hover:bg-gray-100"
-                    aria-label="Close reviews modal"
-                  >
-                    <X className="h-5 w-5 text-gray-500 hover:text-gray-900" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div
-              ref={reviewsScrollRef}
-              className="flex-grow overflow-y-auto px-4 sm:px-6 py-6"
-              aria-live="polite"
-              aria-busy={reviewsInfiniteLoading ? 'true' : 'false'}
-            >
-              {reviewsInfiniteLoading && !modalReviews.length && (
-                <div className="space-y-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="animate-pulse p-4 rounded-xl border border-gray-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-200" />
-                        <div className="h-4 w-40 bg-gray-200 rounded" />
-                      </div>
-                      <div className="mt-3 h-3 w-3/4 bg-gray-200 rounded" />
-                      <div className="mt-2 h-3 w-2/3 bg-gray-200 rounded" />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {reviewsInfiniteError && (
-                <div className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
-                  <span className="font-medium">Failed to load reviews.</span>
-                  <span className="text-red-600">Please try again.</span>
-                </div>
-              )}
-
-              {!modalReviews.length && !reviewsInfiniteLoading && !reviewsInfiniteError && (
-                <div className="text-center text-gray-500 py-16">
-                  <div className="mx-auto w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 text-gray-400"><path fill="currentColor" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-                  </div>
-                  <p className="font-medium">No reviews yet.</p>
-                  <p className="text-sm">New reviews will appear here.</p>
-                </div>
-              )}
-
-              {/* Responsive list */}
-              <div className="space-y-4 sm:space-y-5">
-                {modalReviews.map((r) => (
-                  <ReviewCard
-                    key={r._id}
-                    r={r}
-                    renderStars={renderStars}
-                    dateFormat="DD MMM YYYY"
-                  />
-                ))}
-              </div>
-
-              {/* Infinite scroll sentinel */}
-              {hasNextReviewsPage && <div ref={reviewsSentinelRef} className="h-1" />}
-              {isFetchingNextReviews && (
-                <div className="text-center mt-5 text-sm text-gray-500">Loading more…</div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ReviewsModal
+        isOpen={reviewsModalOpen}
+        onClose={() => setReviewsModalOpen(false)}
+        reviews={modalReviews}
+        totalReviews={reviewsTotal}
+        onLoadMore={fetchNextReviewsPage}
+        isLoadingMore={isFetchingNextReviews}
+        hasMore={hasNextReviewsPage}
+        loadingError={reviewsInfiniteError}
+        sentinelRef={reviewsSentinelRef}
+        entityName='Doctor'
+      />
 
       <ConfirmationModal
         isOpen={modalState.isOpen}

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import AxiosInstances from '../apiManager';
 import NavBar from '../components/NavBar';
 import HospitalCard from '../components/hospital/HospitalCard';
+import { Loader2 } from 'lucide-react';
 
 const HospitalsPage = () => {
   const [hospitals, setHospitals] = useState([]);

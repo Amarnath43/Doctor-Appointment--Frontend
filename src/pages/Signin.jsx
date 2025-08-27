@@ -1,16 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import AxiosInstances from '../apiManager';
 import { toast } from 'react-hot-toast';
 import NavBar from '../components/NavBar';
 import { Loader2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const Signin = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [isLoading, setIsLoading] = useState(false);
     const [serverError, setServerError] = useState({});
     const navigate = useNavigate();
+     const location = useLocation();
+
+     useEffect(() => {
+
+    const flash = location.state?.flash;
+    if (flash?.msg) {
+      (flash.type === 'success' ? toast.success : toast.error)(flash.msg);
+      window.history.replaceState({}, document.title);
+    }
+
+    const pending = sessionStorage.getItem('pendingBooking');
+    if (pending) {
+      toast.error('Please login to book');
+    }
+  }, [location.state]);
 
     const onSubmit = async (raw) => {
   setIsLoading(true);

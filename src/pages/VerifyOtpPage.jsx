@@ -63,13 +63,23 @@ const VerifyOtpPage = () => {
         localStorage.removeItem('authEmail');
         setUser(res.data.user);
 
+
+        const pending = sessionStorage.getItem('pendingBooking');
+        if (pending) {
+          const { path, date, slot } = JSON.parse(pending);
+          sessionStorage.removeItem('pendingBooking');
+          // navigate back to doctor appointment page, restoring selection
+          navigate(path, { state: { selectedDate: date, selectedSlot: slot } });
+          return; // stop further navigation
+        }
+
         // redirect based on role from backend
         const r = res.data.user?.role;
-        const s=res.data.user?.status;
+        const s = res.data.user?.status;
         if (r === 'doctor') navigate('/doctor/home');
-        else if (r === 'admin' ) navigate('/admin/home');
+        else if (r === 'admin') navigate('/admin/home');
         else navigate('/')
-        
+
       } else {
         // signup flow -> go to signin
         localStorage.removeItem('authEmail');

@@ -28,7 +28,7 @@ const DoctorCard = ({
       className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer max-w-sm mx-auto overflow-hidden"
     >
       {/* Header with Doctor Info */}
-      <div className="flex items-center gap-3 p-4">
+      <div className="flex items-center gap-3 p-3">
         <img
           src={profilePicture}
           alt={`Dr. ${name}`}

@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import AxiosInstances from '../../apiManager/index';
 import dayjs from 'dayjs';
+import ConfirmationModal from '../ConfirmationModal';
+import toast from 'react-hot-toast'
 
 const MIN_REVIEW_LEN = 20;
 const PAGE_SIZE = 10; // adjust or make it a query param selector
@@ -42,6 +44,10 @@ const AppointmentList = () => {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [reviewToDeleteId, setReviewToDeleteId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
 
   // Lock body scroll when modal open
   useEffect(() => {
@@ -118,6 +124,7 @@ const AppointmentList = () => {
   };
 
   const closeReviewModal = () => {
+    console.log('Attempting to close modal. Submitting state:', submitting);
     if (submitting) return;
     setReviewModalOpen(false);
   };
@@ -154,24 +161,13 @@ const AppointmentList = () => {
       setReviewModalOpen(false);
       // Refetch current page to reflect server state
       await loadAppointments(page);
+      reviewMode === 'create' ? toast.success("Review added successfully!") : toast.success("Review updated successfully!");
+
     } catch (e) {
-      setFormError('Failed to save review. Please try again.');
+      setFormError('Failed to update review. Please try again.');
+
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  // Delete review (any time) → refetch page
-  const deleteReview = async (apt, e) => {
-    e.stopPropagation();
-    if (!apt?.reviewExists || !apt?.review?._id) return;
-    const ok = window.confirm('Delete your review? This cannot be undone.');
-    if (!ok) return;
-    try {
-      await AxiosInstances.delete(`/reviews/${apt.review._id}`);
-      await loadAppointments(page);
-    } catch (e) {
-      alert('Failed to delete review. Try again.');
     }
   };
 
@@ -231,6 +227,33 @@ const AppointmentList = () => {
       </div>
     );
   }
+
+  // This function opens the confirmation modal
+  const openDeleteModal = (reviewId) => {
+    setReviewToDeleteId(reviewId);
+    setIsDeleteModalOpen(true);
+  };
+
+  // This function handles the actual deletion
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await AxiosInstances.delete(`/reviews/${reviewToDeleteId}`);
+      setIsDeleteModalOpen(false);
+      await loadAppointments(page);
+      setReviewToDeleteId(null);
+      toast.success("Review deleted successfully!");
+    } catch (e) {
+      toast.error("Failed to delete review. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setReviewToDeleteId(null);
+  };
 
   return (
     <div className="space-y-4 p-4">
@@ -385,9 +408,12 @@ const AppointmentList = () => {
 
                         {showDelete && (
                           <button
-                            onClick={(e) => deleteReview(apt, e)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border text-sm text-red-600 border-red-200 hover:bg-red-50"
                             title="Delete review"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDeleteModal(apt.review._id);
+                            }}
                           >
                             <Trash2 className="w-4 h-4" /> Delete
                           </button>
@@ -429,102 +455,111 @@ const AppointmentList = () => {
 
       {/* Review Modal */}
       {reviewModalOpen && (
-        <div className="fixed inset-0 z-50">
-          {/* Overlay */}
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-            onClick={closeReviewModal}
-            aria-hidden="true"
-          />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={closeReviewModal}             // <- click outside closes
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Backdrop (visual only) */}
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" aria-hidden="true" />
 
-          {/* Centered panel */}
-          <div className="relative h-full w-full flex items-center justify-center p-4">
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label={reviewMode === 'create' ? 'Write a review' : 'Edit review'}
-              className="w-full max-w-2xl bg-white rounded-2xl shadow-xl ring-1 ring-black/5
-                   animate-in fade-in zoom-in-95 duration-150"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">
-                  {reviewMode === 'create' ? 'Write a review' : 'Edit review'}
-                </h2>
+          {/* Panel (stops the close) */}
+          <div
+            className="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-xl ring-1 ring-black/5
+                 animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()} // <- prevent closing when clicking inside
+            aria-label={reviewMode === 'create' ? 'Write a review' : 'Edit review'}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">
+                {reviewMode === 'create' ? 'Write a review' : 'Edit review'}
+              </h2>
+              <button
+                className="p-2 rounded-full hover:bg-gray-100"
+                onClick={closeReviewModal}
+                aria-label="Close review modal"
+                disabled={submitting}
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Rating */}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Rating (1–5)
+              </label>
+              <div className="mb-2 flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setRating(s)}
+                    className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
+                  >
+                    <Star className={`w-6 h-6 ${s <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                  </button>
+                ))}
+              </div>
+
+              {/* Textarea */}
+              <label className="block text-sm font-medium text-gray-700 mt-4 mb-1">
+                Your review <span className="text-gray-400">(min {MIN_REVIEW_LEN} characters)</span>
+              </label>
+              <textarea
+                className="w-full border rounded-md p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                rows={5}
+                placeholder="Share your experience…"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                maxLength={800}
+              />
+
+              {formError && (
+                <div className="mt-3 text-sm text-red-600">{formError}</div>
+              )}
+
+              {/* Actions */}
+              <div className="mt-6 flex items-center gap-3">
                 <button
-                  className="p-2 rounded-full hover:bg-gray-100"
-                  onClick={closeReviewModal}
-                  aria-label="Close review modal"
+                  onClick={submitReview}
                   disabled={submitting}
+                  className="px-4 py-2 rounded-md bg-indigo-600 text-white disabled:opacity-60"
                 >
-                  <XCircle className="w-5 h-5" />
+                  {submitting ? 'Saving…' : reviewMode === 'create' ? 'Submit review' : 'Save changes'}
+                </button>
+                <button
+                  onClick={closeReviewModal}
+                  disabled={submitting}
+                  className="px-4 py-2 rounded-md border"
+                >
+                  Cancel
                 </button>
               </div>
 
-              {/* Body */}
-              <div className="p-6">
-                {/* Rating */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rating (1–5)
-                </label>
-                <div className="mb-2 flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setRating(s)}
-                      className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
-                    >
-                      <Star className={`w-6 h-6 ${s <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                    </button>
-                  ))}
-                </div>
-
-                {/* Textarea */}
-                <label className="block text-sm font-medium text-gray-700 mt-4 mb-1">
-                  Your review <span className="text-gray-400">(min {MIN_REVIEW_LEN} characters)</span>
-                </label>
-                <textarea
-                  className="w-full border rounded-md p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  rows={5}
-                  placeholder="Share your experience…"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  maxLength={800}
-                />
-
-                {formError && (
-                  <div className="mt-3 text-sm text-red-600">{formError}</div>
-                )}
-
-                {/* Actions */}
-                <div className="mt-6 flex items-center gap-3">
-                  <button
-                    onClick={submitReview}
-                    disabled={submitting}
-                    className="px-4 py-2 rounded-md bg-indigo-600 text-white disabled:opacity-60"
-                  >
-                    {submitting ? 'Saving…' : reviewMode === 'create' ? 'Submit review' : 'Save changes'}
-                  </button>
-                  <button
-                    onClick={closeReviewModal}
-                    disabled={submitting}
-                    className="px-4 py-2 rounded-md border"
-                  >
-                    Cancel
-                  </button>
-                </div>
-
-                <p className="mt-3 text-xs text-gray-500">
-                  You can edit your review within 24 hours of posting. You may delete it at any time.
-                </p>
-              </div>
+              <p className="mt-3 text-xs text-gray-500">
+                You can edit your review within 24 hours of posting. You may delete it at any time.
+              </p>
             </div>
           </div>
         </div>
       )}
+
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Review"
+        message="Are you sure you want to permanently delete this review? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isConfirming={isDeleting}
+        variant="destructive"
+        confirmText="Yes, Delete"
+        cancelText="No, Go Back"
+      />
 
     </div>
   );

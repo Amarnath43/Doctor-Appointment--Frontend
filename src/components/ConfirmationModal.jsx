@@ -1,23 +1,25 @@
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
+import { lockBodyScroll, unlockBodyScroll } from '../utils/scrollLock';
 
 const ConfirmationModal = ({
   isOpen, title, message, onConfirm, onCancel,
   isConfirming = false, variant = "primary",
   confirmText = "Confirm", cancelText = "Cancel",
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const primary = "bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400";
   const destructive = "bg-red-600 hover:bg-red-700 disabled:bg-red-400";
   const confirmBtn = variant === "destructive" ? destructive : primary;
 
-  // optional: lock background scroll
-  useEffect(() => {
-    document.body.classList.add("overflow-hidden");
-    return () => document.body.classList.remove("overflow-hidden");
-  }, []);
 
   return createPortal(
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="dialog" aria-modal="true">
