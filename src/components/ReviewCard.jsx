@@ -16,7 +16,7 @@ const ReviewCard = ({ r }) => {
     : '';
 
   return (
-    <article className="w-full rounded-xl border border-gray-200 bg-white p-5 transition-shadow duration-300 hover:shadow-lg">
+    <article className="w-full rounded-xl border border-gray-200 bg-white p-4 transition-shadow duration-300 hover:shadow-lg">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
           <img
@@ -52,7 +52,7 @@ const ReviewCard = ({ r }) => {
               className="h-8 w-8 rounded-full object-cover ring-1 ring-indigo-200"
             />
             <div className="text-xs font-semibold text-indigo-700">
-              Response from Dr. {doctorName}
+              Dr. {doctorName}
               <span className="text-indigo-300 font-normal mx-2">•</span>
               <span className="font-normal text-indigo-600">{repliedAt}</span>
             </div>

@@ -9,9 +9,10 @@ import { makePublicUrlFromKey } from '../utils/s3PublicUrl';
 import { renderStars } from '../utils/reviewUtils';
 import ReviewCard from '../components/ReviewCard';
 import ReviewsModal from '../components/ReviewsModal';
+import dayjs from 'dayjs';
 import { formatIST } from '../utils/datetime';
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 3;
 const REVIEWS_PREVIEW_LIMIT = 2;
 const REVIEWS_PAGE_SIZE = 10;
 
@@ -65,6 +66,7 @@ const HospitalPage = () => {
 
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
   const reviewsSentinelRef = useRef(null);
+  const reviewsScrollRef = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(modalSearch.trim()), 300);
@@ -196,89 +198,96 @@ const HospitalPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 px-4 sm:px-20 py-4">
       <NavBar />
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative max-w-7xl mx-auto mt-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-          <div className="relative h-80 bg-gray-200">
-            {totalImages ? (
-              <img
-                src={hospital.images[selectedImageIndex]}
-                alt={hospital.name}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.src = '/default-hospital.png'; }}
-              />
-            ) : (
-              <div className="w-full h-full grid place-items-center text-gray-400">No image</div>
-            )}
-            {totalImages > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-                {hospital.images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`w-3 h-3 rounded-full transition-all ${index === selectedImageIndex ? 'bg-white' : 'bg-white/50'}`}
-                  />
-                ))}
-              </div>
-            )}
-            {totalImages > 1 && (
-              <>
-                <button onClick={prevImage} className="absolute top-1/2 left-4 -translate-y-1/2 bg-white p-2 rounded-full shadow" aria-label="Previous">
-                  <ChevronLeft />
-                </button>
-                <button onClick={nextImage} className="absolute top-1/2 right-4 -translate-y-1/2 bg-white p-2 rounded-full shadow" aria-label="Next">
-                  <ChevronRight />
-                </button>
-              </>
-            )}
-          </div>
-          <div className="p-8">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
-              <div className="mb-4 lg:mb-0">
-                <div className="flex items-center mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900 mr-4">{hospital.name}</h1>
-                  {typeof hospital.rating !== 'undefined' && (
-                    <div className="flex items-center">
-                      <span className="text-2xl font-bold text-gray-900 mr-2">{hospital.rating}</span>
-                      {renderStars(hospital.rating)}
-                      {typeof hospital.reviewCount !== 'undefined' && (
-                        <span className="text-gray-600 ml-2">({hospital.reviewCount} reviews)</span>
+
+          {/* --- MODIFICATION HERE: Added grid container --- */}
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+
+            {/* --- Left Column (Images) --- */}
+            {/* MODIFIED: Stays 16:9 on mobile, but stretches to full height on large screens */}
+            <div className="relative aspect-[16/9]  lg:h-full bg-gray-200">
+              {totalImages ? (
+                <img
+                  src={hospital.images[selectedImageIndex]}
+                  alt={hospital.name}
+                  className="w-full h-full object-cover" // This stretches to fill the container
+                  onError={(e) => { e.currentTarget.src = '/default-hospital.png'; }}
+                />
+              ) : (
+                <div className="w-full h-full grid place-items-center text-gray-400">No image</div>
+              )}
+              {totalImages > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                  {hospital.images.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-all ${index === selectedImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                    />
+                  ))}
+                </div>
+              )}
+              {totalImages > 1 && (
+                <>
+                  <button onClick={prevImage} className="absolute top-1/2 left-4 -translate-y-1/2 bg-white p-2 rounded-full shadow" aria-label="Previous">
+                    <ChevronLeft />
+                  </button>
+                  <button onClick={nextImage} className="absolute top-1/2 right-4 -translate-y-1/2 bg-white p-2 rounded-full shadow" aria-label="Next">
+                    <ChevronRight />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* --- Right Column (Data) --- */}
+            <div className="p-8">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
+                <div className="mb-4 lg:mb-0">
+                  <div className="flex items-center mb-2">
+                    <h1 className="text-3xl font-bold text-gray-900 mr-4">{hospital.name}</h1>
+                    {
+
+                      typeof hospital.ratingAvg !== 'undefined' && (
+                        <div className="flex items-center">
+                          <span className="text-2xl font-bold text-gray-900 mr-2">{hospital.rating}</span>
+                          {renderStars(hospital.ratingAvg)}
+                          {typeof hospital.ratingCount !== 'undefined' && (
+                            <span className="text-gray-600 ml-2">({hospital.ratingCount} reviews)</span>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  )}
-                </div>
-                {typeof hospital.avgDoctorRating !== 'undefined' && (
-                  <div className="flex items-center text-gray-600 mb-2">
-                    <Award className="w-5 h-5 mr-2 text-blue-500" />
-                    <span className="font-medium">Average Doctor Rating: {hospital.avgDoctorRating}</span>
                   </div>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Location</h3>
-                <div className="flex items-center text-gray-600">
-                  <MapPin className="w-5 h-5 mr-2 text-red-500" />
-                  <span>{hospital.location || '—'}</span>
                 </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Available Specializations</h3>
-                <div className="flex flex-wrap gap-2">
-                  {specializations.length ? (
-                    specializations.map((spec, i) => (
-                      <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                        {spec}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-gray-500">No specializations</span>
-                  )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Location</h3>
+                  <div className="flex items-center text-gray-600">
+                    <MapPin className="w-5 h-5 mr-2 text-red-500" />
+                    <span>{hospital.location || '—'}</span>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Available Specializations</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {specializations.length ? (
+                      specializations.map((spec, i) => (
+                        <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                          {spec}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500">No specializations</span>
+                    )}
+                  </div>
                 </div>
               </div>
+              {hospital.description && <p className="text-gray-700 leading-relaxed">{hospital.description}</p>}
             </div>
-            {hospital.description && <p className="text-gray-700 leading-relaxed">{hospital.description}</p>}
           </div>
+          {/* --- END MODIFICATION --- */}
+
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Tests</h2>
@@ -304,7 +313,11 @@ const HospitalPage = () => {
                   experience={doctor.experience}
                   hospital={doctor.hospital?.name || 'Unknown Clinic'}
                   location={doctor.hospital?.location || 'Unknown Location'}
-                  nextAvailability={doctor?.nextAvailability?.dateTime || 'No slots available'}
+                  nextAvailability={
+                    doctor?.nextAvailability?.dateTime
+                      ? dayjs(doctor.nextAvailability.dateTime).format('dddd, MMMM D, YYYY h:mm A')
+                      : 'No slots available'
+                  }
                   consultationFee={doctor.fee}
                   profilePicture={
                     makePublicUrlFromKey(doctor.userId?.profilePicture) ||
@@ -430,6 +443,7 @@ const HospitalPage = () => {
         hasMore={hasNextReviewsPage}
         loadingError={reviewsInfiniteError}
         sentinelRef={reviewsSentinelRef}
+        scrollRef={reviewsScrollRef}
         entityName='Hospital'
       />
     </div>

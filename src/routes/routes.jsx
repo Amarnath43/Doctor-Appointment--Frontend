@@ -25,6 +25,7 @@ import AdminDashboardLayout from '../layouts/AdminDashboardLayout';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import AdminApprovalPanel from '../components/Admin/AdminApprovalPanel';
 import AllUsers from '../components/Admin/AllUsers';
+import GuestOnly from '../components/GuestOnly';
 import HospitalList from '../components/Admin/HospitalList';
 import AppointmentHistoryAdmin from '../pages/Admin/AppointmentHistoryAdmin';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
@@ -38,20 +39,24 @@ import AdminReviewsPage from '../pages/Admin/AdminReviewsPage';
 
 const appRoutes = [
   { path: '/', element: <HomePage /> },
-  { path: '/doctor/register', element: <RegisterDoctor /> },
-  { path: '/verify-doctor-otp', element: <VerifyDoctorOtp /> },
-  { path: '/user/register', element: <RegisterUser /> },
-  { path: '/signin', element: <Signin /> },
-  { path: '/search-doctors', element: <SearchDoctors /> },
+
+  { path: '/signin', element: <GuestOnly><Signin /></GuestOnly> },
+  { path: '/user/register', element: <GuestOnly><RegisterUser /></GuestOnly> },
+  { path: '/doctor/register', element: <GuestOnly><RegisterDoctor /></GuestOnly> },
+  { path: '/verify-doctor-otp', element: <GuestOnly><VerifyDoctorOtp /></GuestOnly> },
+  { path: '/forgot-password', element: <GuestOnly><ForgotPasswordPage /></GuestOnly> },
+  { path: '/reset-password', element: <GuestOnly><ResetPasswordPage /></GuestOnly> },
+  { path: '/verify-otp', element: <GuestOnly><VerifyOtpPage /></GuestOnly> },
+
+
   { path: '/unauthorized', element: <UnauthorizedPage /> },
+  { path: '/search-doctors', element: <SearchDoctors /> },
   { path: '/aboutUs', element: <AboutUs /> },
   { path: '/contactPage', element: <ContactPage /> },
   { path: '/hospitals', element: <HospitalsPage /> },
   { path: '/hospitals/:hospitalId', element: <HospitalPage /> },
   { path: '/doctor/:id', element: <GoToDetailsPage /> },
-  { path: '/forgot-password', element: <ForgotPasswordPage /> },
-  { path: "/reset-password", element: <ResetPasswordPage /> },
-  { path: "/verify-otp", element: <VerifyOtpPage /> },
+  
 
   { path: '/appointment/success', element: <AppointmentSuccess /> },
   { path: '/appointment/:appointmentId', element: <AppointmentDetails /> },

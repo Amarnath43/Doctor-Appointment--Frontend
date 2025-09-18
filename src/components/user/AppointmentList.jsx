@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -16,7 +16,7 @@ import {
 import AxiosInstances from '../../apiManager/index';
 import dayjs from 'dayjs';
 import ConfirmationModal from '../ConfirmationModal';
-import toast from 'react-hot-toast'
+import toast from 'react-hot-toast';
 
 const MIN_REVIEW_LEN = 20;
 const PAGE_SIZE = 10; // adjust or make it a query param selector
@@ -48,7 +48,6 @@ const AppointmentList = () => {
   const [reviewToDeleteId, setReviewToDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-
   // Lock body scroll when modal open
   useEffect(() => {
     if (!reviewModalOpen) return;
@@ -57,49 +56,85 @@ const AppointmentList = () => {
     return () => { document.body.style.overflow = prev; };
   }, [reviewModalOpen]);
 
-  // Determine status from route
-  const getStatusFromPath = () => {
-    if (location.pathname.includes('upcoming')) return 'Confirmed';
-    if (location.pathname.includes('past')) return 'Completed';
-    if (location.pathname.includes('cancelled')) return 'Cancelled';
-    return '';
+  // Derive bucket from route
+  const getBucketFromPath = () => {
+    if (location.pathname.includes('upcoming')) return 'upcoming';
+    if (location.pathname.includes('past')) return 'past';
+    if (location.pathname.includes('cancelled')) return 'cancelled';
+    return 'upcoming';
   };
-  const status = getStatusFromPath();
+  const bucket = getBucketFromPath();
 
-  // Fetch appointments (server-driven, paginated, with review + flags)
-  const loadAppointments = async (targetPage = page) => {
+  // Track last bucket we fetched to avoid double fetching
+  const prevBucket = useRef(bucket);
+
+  // Stable fetcher with cancellation support
+
+  
+  const doFetch = async (targetPage) => {
     setLoading(true);
     setError('');
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    // cancel previous in-flight call
+    doFetch.lastController?.abort();
+    doFetch.lastController = controller;
+
     try {
-      const res = await AxiosInstances.get('/user/appointments', {
-        params: { status, page: targetPage, limit: PAGE_SIZE }
+      // NOTE: If your router is mounted at /api and Axios baseURL isn't /api,
+      // change to '/api/user/appointments/history'
+      const res = await AxiosInstances.get('/user/appointments/history', {
+        params: { bucket, page: targetPage, limit: PAGE_SIZE },
+        signal
       });
-      const { items = [], totalPages = 1, hasPrev = false, hasNext = false, page: serverPage = 1 } = res.data || {};
+
+      if (signal.aborted) return;
+
+      const {
+        items = [],
+        totalPages = 1,
+        hasPrev = false,
+        hasNext = false,
+        page: serverPage = targetPage
+      } = res.data || {};
+
       setAppointments(items);
       setTotalPages(totalPages);
       setHasPrev(hasPrev);
       setHasNext(hasNext);
-      setPage(serverPage);
+      setPage(serverPage); // keep in sync with server if it adjusts
     } catch (err) {
-      setError('Failed to fetch appointments');
+      // Ignore intentional cancellations
+      if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED') {
+        setError('Failed to fetch appointments');
+      }
     } finally {
-      setLoading(false);
+      if (!signal.aborted) setLoading(false);
     }
   };
 
-  // Reload when status or page changes
+  // Single effect: handles bucket changes AND page changes without duplicates
   useEffect(() => {
-    // when changing tabs (status), reset to page 1
-    setPage(1);
-  }, [status]);
+    // If bucket changed → reset to page 1 and fetch ONCE
+    if (prevBucket.current !== bucket) {
+      prevBucket.current = bucket;
 
-  useEffect(() => {
-    if (!status) return;
-    loadAppointments(page);
+      if (page === 1) {
+        doFetch(1);
+      } else {
+        setPage(1); // will re-run effect; we early-return to avoid double fetch
+      }
+      return;
+    }
+
+    // Same bucket, page changed → fetch that page
+    doFetch(page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, page]);
+  }, [bucket, page]);
 
-  // Helpers (now server-driven)
+  // Helpers (server-driven)
   const canWriteReview = (apt) => apt?.status === 'Completed' && apt?.reviewExists === false;
   const canEditReview = (apt) => apt?.canEdit === true;
 
@@ -124,7 +159,6 @@ const AppointmentList = () => {
   };
 
   const closeReviewModal = () => {
-    console.log('Attempting to close modal. Submitting state:', submitting);
     if (submitting) return;
     setReviewModalOpen(false);
   };
@@ -145,50 +179,63 @@ const AppointmentList = () => {
     setSubmitting(true);
     try {
       if (reviewMode === 'create') {
-        // POST /reviews
         await AxiosInstances.post('/reviews', {
           appointmentId: activeAptId,
           text: text.trim(),
           rating_overall: rating
         });
       } else {
-        // PATCH /reviews/:id
         await AxiosInstances.patch(`/reviews/${activeReviewId}`, {
           text: text.trim(),
           rating_overall: rating
         });
       }
       setReviewModalOpen(false);
-      // Refetch current page to reflect server state
-      await loadAppointments(page);
-      reviewMode === 'create' ? toast.success("Review added successfully!") : toast.success("Review updated successfully!");
-
+      await doFetch(page);
+      reviewMode === 'create'
+        ? toast.success('Review added successfully!')
+        : toast.success('Review updated successfully!');
     } catch (e) {
       setFormError('Failed to update review. Please try again.');
-
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Star picker (for modal)
-  const StarInput = ({ value, onChange }) => (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <button
-          key={s}
-          type="button"
-          onClick={() => onChange(s)}
-          className="p-1"
-          aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
-        >
-          <Star className={`w-6 h-6 ${s <= value ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-        </button>
-      ))}
-    </div>
-  );
+  // Delete review modal handlers
+  const openDeleteModal = (reviewId) => {
+    setReviewToDeleteId(reviewId);
+    setIsDeleteModalOpen(true);
+  };
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await AxiosInstances.delete(`/reviews/${reviewToDeleteId}`);
+      setIsDeleteModalOpen(false);
+      await doFetch(page);
+      setReviewToDeleteId(null);
+      toast.success('Review deleted successfully!');
+    } catch (e) {
+      toast.error('Failed to delete review. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setReviewToDeleteId(null);
+  };
 
-  // Static mappings
+  // Pretty label for header/empty states
+  const bucketLabel = bucket[0].toUpperCase() + bucket.slice(1);
+
+  const fmt = new Intl.DateTimeFormat('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Kolkata'
+  });
+
+  // Status chips (visual only)
   const getStatusDisplay = (appointmentStatus) => {
     switch (appointmentStatus) {
       case 'Confirmed':
@@ -228,61 +275,15 @@ const AppointmentList = () => {
     );
   }
 
-  // This function opens the confirmation modal
-  const openDeleteModal = (reviewId) => {
-    setReviewToDeleteId(reviewId);
-    setIsDeleteModalOpen(true);
-  };
-
-  // This function handles the actual deletion
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await AxiosInstances.delete(`/reviews/${reviewToDeleteId}`);
-      setIsDeleteModalOpen(false);
-      await loadAppointments(page);
-      setReviewToDeleteId(null);
-      toast.success("Review deleted successfully!");
-    } catch (e) {
-      toast.error("Failed to delete review. Please try again.");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setIsDeleteModalOpen(false);
-    setReviewToDeleteId(null);
-  };
-
   return (
     <div className="space-y-4 p-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Calendar className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl font-bold text-gray-800 capitalize">
-            {status} Appointments
+          <h2 className="sm:text-xl text-md font-bold text-gray-800 capitalize">
+            {bucketLabel} Appointments
           </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={goPrev}
-            disabled={!hasPrev}
-            className="px-3 py-1.5 rounded border disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            onClick={goNext}
-            disabled={!hasNext}
-            className="px-3 py-1.5 rounded border disabled:opacity-50"
-          >
-            Next
-          </button>
         </div>
       </div>
 
@@ -290,10 +291,10 @@ const AppointmentList = () => {
         <div className="text-center py-12">
           <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <h3 className="text-lg font-medium text-gray-600 mb-1">
-            No {status} appointments found
+            No {bucketLabel.toLowerCase()} appointments found
           </h3>
           <p className="text-gray-500 text-sm">
-            Your {status} appointments will appear here when available.
+            Your {bucketLabel.toLowerCase()} appointments will appear here when available.
           </p>
         </div>
       ) : (
@@ -336,7 +337,7 @@ const AppointmentList = () => {
                     </div>
                   </div>
 
-                  {/* Doctor (new shape: doctor.user.name) */}
+                  {/* Doctor */}
                   <div className="flex items-center space-x-2">
                     <Stethoscope className="w-4 h-4 text-blue-600 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
@@ -370,7 +371,7 @@ const AppointmentList = () => {
                   </div>
                 </div>
 
-                {/* Review actions - server driven */}
+                {/* Review actions */}
                 {apt.status === 'Completed' && (
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     {showWrite && (
@@ -432,7 +433,7 @@ const AppointmentList = () => {
         </div>
       )}
 
-      {/* Pagination footer (duplicate controls at bottom for convenience) */}
+      {/* Pagination footer */}
       <div className="flex items-center justify-center gap-3 pt-2">
         <button
           onClick={goPrev}
@@ -457,21 +458,17 @@ const AppointmentList = () => {
       {reviewModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          onClick={closeReviewModal}             // <- click outside closes
+          onClick={closeReviewModal}
           role="dialog"
           aria-modal="true"
         >
-          {/* Backdrop (visual only) */}
           <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" aria-hidden="true" />
-
-          {/* Panel (stops the close) */}
           <div
             className="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-xl ring-1 ring-black/5
                  animate-in fade-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()} // <- prevent closing when clicking inside
+            onClick={(e) => e.stopPropagation()}
             aria-label={reviewMode === 'create' ? 'Write a review' : 'Edit review'}
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold">
                 {reviewMode === 'create' ? 'Write a review' : 'Edit review'}
@@ -487,7 +484,6 @@ const AppointmentList = () => {
             </div>
 
             <div className="p-6">
-              {/* Rating */}
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Rating (1–5)
               </label>
@@ -505,7 +501,6 @@ const AppointmentList = () => {
                 ))}
               </div>
 
-              {/* Textarea */}
               <label className="block text-sm font-medium text-gray-700 mt-4 mb-1">
                 Your review <span className="text-gray-400">(min {MIN_REVIEW_LEN} characters)</span>
               </label>
@@ -522,7 +517,6 @@ const AppointmentList = () => {
                 <div className="mt-3 text-sm text-red-600">{formError}</div>
               )}
 
-              {/* Actions */}
               <div className="mt-6 flex items-center gap-3">
                 <button
                   onClick={submitReview}
@@ -548,7 +542,6 @@ const AppointmentList = () => {
         </div>
       )}
 
-
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         title="Delete Review"
@@ -560,7 +553,6 @@ const AppointmentList = () => {
         confirmText="Yes, Delete"
         cancelText="No, Go Back"
       />
-
     </div>
   );
 };

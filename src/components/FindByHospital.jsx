@@ -10,6 +10,7 @@ const SKELETON_COUNT = 3;
 const FindByHospital = () => {
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +18,12 @@ const FindByHospital = () => {
     (async () => {
       try {
         const res = await AxiosInstances.get('/user/hospitals', { params: { limit: 3 } });
-        if (!cancelled) setHospitals(res.data?.data ?? []);
+        if (!cancelled) {
+          setHospitals(res.data?.data ?? []);
+          setHasMore(Boolean(res.data?.pagination?.hasMore) ?? false);
+        }
+
+
       } catch {
         if (!cancelled) setHospitals([]);
       } finally {
@@ -26,6 +32,11 @@ const FindByHospital = () => {
     })();
     return () => { cancelled = true; };
   }, []);
+
+
+   if (!loading && hospitals.length === 0) {
+    return null;
+  }
 
   return (
     <div className="text-center mt-4">
@@ -37,31 +48,33 @@ const FindByHospital = () => {
       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6" aria-live="polite">
         {loading
           ? Array.from({ length: SKELETON_COUNT }).map((_, idx) => (
-              <li key={`skeleton-${idx}`}>
-                <HospitalCardSkeleton />
-              </li>
-            ))
+            <li key={`skeleton-${idx}`}>
+              <HospitalCardSkeleton />
+            </li>
+          ))
           : hospitals.map((h) => (
-              <li key={h._id}>
-                <HospitalCard
-                  id={h._id}
-                  name={h.name}
-                  location={h.location}
-                  imageUrl={h.imageUrl}
-                  doctorCount={h.doctorCount}
-                />
-              </li>
-            ))}
+            <li key={h._id}>
+              <HospitalCard
+                id={h._id}
+                name={h.name}
+                location={h.location}
+                imageUrl={h.imageUrl}
+                doctorCount={h.doctorCount}
+              />
+            </li>
+          ))}
       </ul>
 
-      <div className="flex justify-center mt-6 px-4">
-        <button
-          onClick={() => navigate('/hospitals')}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full shadow-sm hover:shadow-md transition-all duration-200 text-sm"
-        >
-          View All Hospitals
-        </button>
-      </div>
+      {hasMore && (
+        <div className="flex justify-center mt-6 px-4">
+          <button
+            onClick={() => navigate('/hospitals')}
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full shadow-sm hover:shadow-md transition-all duration-200 text-sm"
+          >
+            View All Hospitals
+          </button>
+        </div>
+      )}
     </div>
   );
 };

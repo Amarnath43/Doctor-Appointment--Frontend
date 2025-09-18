@@ -12,7 +12,9 @@ const ReviewsModal = ({
   isLoadingMore,
   hasMore,
   loadingError,
+  
   sentinelRef,
+  scrollRef,
   entityName = 'Doctor',
 }) => {
   // All hooks must be at the top level of the component.
@@ -107,6 +109,7 @@ const ReviewsModal = ({
         {/* Body */}
         <div
           className="flex-grow overflow-y-auto px-4 sm:px-6 py-6 space-y-4"
+          ref={scrollRef} 
         >
           {loadingError && (
             <div className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">

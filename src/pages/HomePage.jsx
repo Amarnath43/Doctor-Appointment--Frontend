@@ -6,6 +6,7 @@ import FindByHospital from '../components/FindByHospital'
 import { Star,Stethoscope } from 'lucide-react';
 import Footer from '../components/Footer'
 import { Navigate, useNavigate } from 'react-router-dom'
+import useUserStore from '../store/user'
 
 const testimonials = [
   {
@@ -42,7 +43,7 @@ const HomePage = () => {
   };
 
   const navigate = useNavigate();
-
+  const user = useUserStore((s) => s.user);     
   
 
 
@@ -71,7 +72,8 @@ const HomePage = () => {
       </div>
       
     </div>
-    <div className="relative isolate bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl shadow-lg border border-blue-200 overflow-hidden px-6 py-10">
+
+{!user &&(<div className="relative isolate bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl shadow-lg border border-blue-200 overflow-hidden px-6 py-10">
       <div className="flex flex-col items-center text-center space-y-4">
         <div className="bg-blue-100 rounded-full p-3">
           <Stethoscope className="w-8 h-8 text-blue-600" />
@@ -88,10 +90,15 @@ const HomePage = () => {
         </button>
       </div>
     </div>
+)
+}
+   
+
     <Footer/>
 
     </div>
   )
+
 }
 
 export default HomePage
