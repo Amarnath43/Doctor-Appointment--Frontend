@@ -20,47 +20,27 @@ import { makePublicUrlFromKey } from '../../utils/s3PublicUrl'
 const UserProfile = () => {
   const {user, setUser}=useUserStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
- const [userData,setUserData] =useState({
-  name: user.name,
-  email: user.email,
-  phone: user.phone,
-  profilePicture: user.profilePicture || null,
-  dob: user?.profile?.dob || "",
-  gender: user?.profile?.gender,
-  bloodGroup: user?.profile?.bloodGroup,
-  address: user?.profile?.address
-})
 
-useEffect(() => {
-  const loadProfileImage = async () => {
-    let imageUrl = null;
+  let profileImageUrl = null;
+  if (user?.profilePicture) {
+    try {
 
-    if (user?.profilePicture) {
-      try {
-        imageUrl=makePublicUrlFromKey(user.profilePicture)
-      } catch (error) {
-        console.error('Failed to get public image URL:', error);
-      }
+      profileImageUrl = makePublicUrlFromKey(user.profilePicture);
+    } catch (error) {
+      console.error('Failed to get public image URL:', error);
     }
-
-    setUserData({
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      profilePicture: imageUrl || null,
-      dob: user?.profile?.dob || '',
-      gender: user?.profile?.gender,
-      bloodGroup: user?.profile?.bloodGroup,
-      address: user?.profile?.address
-    });
-  };
-
-  if (user) {
-    loadProfileImage();
   }
-}, [user]);
 
-  
+  const userData = {
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    profilePicture: profileImageUrl, 
+    dob: user?.profile?.dob || "",
+    gender: user?.profile?.gender,
+    bloodGroup: user?.profile?.bloodGroup,
+    address: user?.profile?.address
+  };
 
   const handleEditProfile = () => {
     setIsEditModalOpen(true)
