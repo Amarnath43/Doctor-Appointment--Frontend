@@ -1,80 +1,81 @@
-import { useEffect, useState } from 'react'
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  MapPin, 
-  Edit3,
-  Home,
-  Clock,
-  CheckCircle,
-  XCircle,
-  ChevronDown,
-  Activity
-} from 'lucide-react'
-import EditProfileModal from './EditProfileModal'
-import useUserStore from '../../store/user'
-import { makePublicUrlFromKey } from '../../utils/s3PublicUrl'
+import { useEffect, useState, useMemo } from 'react';
+import {
+  User, Mail, Phone, Calendar, MapPin, Edit3
+} from 'lucide-react';
+import EditProfileModal from './EditProfileModal'; // Adjust path if needed
+import useUserStore from '../../store/user';
+import { makePublicUrlFromKey } from '../../utils/s3PublicUrl';
+import useSWR, { mutate } from 'swr';
+import { fetcher } from '../../utils/fetcher';
 
 const UserProfile = () => {
-  const {user, setUser}=useUserStore();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const { setUser } = useUserStore();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  let profileImageUrl = null;
-  if (user?.profilePicture) {
-    try {
+  const { data: user, error, isLoading } = useSWR('/user/profile', fetcher);
 
-      profileImageUrl = makePublicUrlFromKey(user.profilePicture);
-    } catch (error) {
-      console.error('Failed to get public image URL:', error);
+  useEffect(() => {
+    if (user) {
+      setUser(user);
     }
-  }
+  }, [user, setUser]);
 
-  const userData = {
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    profilePicture: profileImageUrl, 
-    dob: user?.profile?.dob || "",
-    gender: user?.profile?.gender,
-    bloodGroup: user?.profile?.bloodGroup,
-    address: user?.profile?.address
-  };
-
-  const handleEditProfile = () => {
-    setIsEditModalOpen(true)
-  }
-
-  const handleCloseModal = () => {
-    setIsEditModalOpen(false)
-  }
+  const userData = useMemo(() => {
+    if (!user) return null;
+    const profileImageUrl = user.profilePicture
+      ? makePublicUrlFromKey(user.profilePicture)
+      : null;
+    return {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      profilePicture: profileImageUrl,
+      dob: user.profile?.dob,
+      gender: user.profile?.gender,
+      bloodGroup: user.profile?.bloodGroup,
+      address: user.profile?.address,
+      updatedAt: user.updatedAt,
+    };
+  }, [user]);
 
   const handleProfileUpdated = (updatedUser) => {
-    setUser(updatedUser)
-    console.log('Profile updated:', updatedUser)
-  }
+    setUser(updatedUser);
+    mutate('/user/profile', updatedUser , false); // Optimistically update and prevent re-fetch
+    setIsEditModalOpen(false);
+  };
 
-  const getInitials = (name) => {
+  const getInitials = (name = '') => {
     return name
       .split(' ')
       .map(word => word.charAt(0))
       .join('')
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
 
   const formatDate = (dateString) => {
+    if (!dateString || !new Date(dateString).getTime()) {
+      return 'Not Provided';
+    }
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    })
+    });
+  };
+
+  const handleEditProfile = () => setIsEditModalOpen(true);
+  const handleCloseModal = () => setIsEditModalOpen(false);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-[calc(100vh-140px)]">Loading...</div>;
+  }
+  if (error || !userData) {
+    return <div className="flex items-center justify-center h-[calc(100vh-140px)]">Could not load profile.</div>;
   }
 
   return (
-    <div className="h-[calc(100vh-140px)] bg-gray-50">
-      {/* Page Header */}
+    <div className="h-[calc(100vh-140px)] bg-gray-50 overflow-y-auto">
       <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
@@ -93,26 +94,23 @@ const UserProfile = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
-        {/* Profile Header Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden mb-6">
-          <div className="h-24 md:h-32" />
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden mb-6 ">
+          <div className="h-24 md:h-32 bg-gradient-to-r " />
           <div className="px-6 pb-6 -mt-16 sm:-mt-20">
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
               {userData.profilePicture ? (
                 <img
-                  src={userData.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          userData.profilePicture || 'Doctor'
-                        )}&background=random`}
+                  src={`${userData.profilePicture}?t=${new Date(userData.updatedAt || Date.now()).getTime()}`}
                   alt="Profile"
-                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white object-cover shadow-lg"
+                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white object-cover shadow-lg bg-gray-200"
                 />
               ) : (
-                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-slate-100 flex items-center justify-center shadow-lg">
-                  <span className="text-3xl sm:text-4xl font-bold text-slate-600">
-                    {getInitials(userData.name)}
-                  </span>
+                <div
+                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white flex items-center justify-center shadow-lg bg-cover bg-center"
+                  style={{ backgroundImage: `url(https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=random&color=fff&size=128)` }}
+                >
+                  <span className="opacity-0">{getInitials(userData.name)}</span>
                 </div>
               )}
               <div className="text-center sm:text-left sm:pb-4">
@@ -126,86 +124,39 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Profile Details Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Phone Number */}
-          <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Phone className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">PHONE NUMBER</p>
-                <p className="text-sm font-bold text-gray-900 truncate">{userData.phone}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Date of Birth */}
-          <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-1">DATE OF BIRTH</p>
-                <p className="text-sm font-bold text-gray-900">{formatDate(userData.dob)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Gender */}
-          <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <User className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-1">GENDER</p>
-                <p className="text-sm font-bold text-gray-900">{userData.gender}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Blood Group */}
-          <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">B</span>
-                </div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-1">BLOOD GROUP</p>
-                <p className="text-sm font-bold text-gray-900">{userData.bloodGroup}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="sm:col-span-2 lg:col-span-2 bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-6 h-6 text-orange-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide mb-1">ADDRESS</p>
-                <p className="text-sm font-bold text-gray-900 leading-relaxed">{userData.address}</p>
-              </div>
-            </div>
-          </div>
+          <InfoCard icon={Phone} label="Phone Number" value={userData.phone} color="blue" />
+          <InfoCard icon={Calendar} label="Date of Birth" value={formatDate(userData.dob)} color="green" />
+          <InfoCard icon={User} label="Gender" value={userData.gender} color="purple" />
+          <InfoCard icon={User} label="Blood Group" value={userData.bloodGroup} color="red" />
+          <InfoCard icon={MapPin} label="Address" value={userData.address} color="orange" className="sm:col-span-2 lg:col-span-2" />
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={isEditModalOpen}
-        onClose={handleCloseModal}
-        userData={userData}
-        onProfileUpdated={handleProfileUpdated}
-      />
+      {isEditModalOpen && (
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={handleCloseModal}
+          userData={userData}
+          onProfileUpdated={handleProfileUpdated}
+        />
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default UserProfile
+const InfoCard = ({ icon: Icon, label, value, color, className = '' }) => (
+  <div className={`bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 ${className}`}>
+    <div className="flex items-center gap-4">
+      <div className={`w-12 h-12 bg-${color}-100 rounded-xl flex items-center justify-center flex-shrink-0`}>
+        <Icon className={`w-6 h-6 text-${color}-600`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={`text-xs font-semibold text-${color}-600 uppercase tracking-wide mb-1`}>{label}</p>
+        <p className="text-sm font-bold text-gray-900 break-words">{value || 'Not Provided'}</p>
+      </div>
+    </div>
+  </div>
+);
+
+export default UserProfile;
