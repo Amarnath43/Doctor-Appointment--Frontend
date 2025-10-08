@@ -19,8 +19,8 @@ const VerifyOtpPage = () => {
   const [cooldown, setCooldown] = useState(0);
 
   // pick endpoints based on role
-  const VERIFY_ENDPOINT =  role === 'doctor' ? '/doctor/verify-otp' :'/user/verify-otp';
-  const RESEND_ENDPOINT = role === 'doctor' ? '/doctor/resend-otp' : '/user/resend-otp';
+  const VERIFY_ENDPOINT =  role === 'doctor'  && isLoginFlow===false ? '/doctor/verify-otp' :'/user/verify-otp';
+  const RESEND_ENDPOINT = role === 'doctor' && isLoginFlow===false ? '/doctor/resend-otp' : '/user/resend-otp';
 
   useEffect(() => {
     const storedEmail = sessionStorage.getItem('authEmail');
