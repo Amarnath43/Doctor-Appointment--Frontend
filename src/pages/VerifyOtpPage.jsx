@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useUserStore from '../store/user';
@@ -11,7 +10,6 @@ const VerifyOtpPage = () => {
   const location = useLocation();
   const { setUser } = useUserStore();
 
-  // pass { role: 'doctor' | 'user', isLoginFlow: boolean } when navigating to this page
   const role = location.state?.role || 'user';
   const isLoginFlow = location.state?.isLoginFlow || false;
 
@@ -21,11 +19,11 @@ const VerifyOtpPage = () => {
   const [cooldown, setCooldown] = useState(0);
 
   // pick endpoints based on role
-  const VERIFY_ENDPOINT = '/user/verify-otp';
+  const VERIFY_ENDPOINT =  role === 'doctor' ? '/doctor/verify-otp' :'/user/verify-otp';
   const RESEND_ENDPOINT = role === 'doctor' ? '/doctor/resend-otp' : '/user/resend-otp';
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem('authEmail');
+    const storedEmail = sessionStorage.getItem('authEmail');
     if (!storedEmail) {
       toast.error('Email not found. Please start again.');
       navigate(isLoginFlow ? '/signin' : role === 'doctor' ? '/doctor/register' : '/user/register');
@@ -60,7 +58,7 @@ const VerifyOtpPage = () => {
 
       if (isLoginFlow && res.data.token) {
         setToken(res.data.token);
-        localStorage.removeItem('authEmail');
+        sessionStorage.removeItem('authEmail');
         setUser(res.data.user);
 
 
@@ -82,7 +80,7 @@ const VerifyOtpPage = () => {
 
       } else {
         // signup flow -> go to signin
-        localStorage.removeItem('authEmail');
+        sessionStorage.removeItem('authEmail');
         navigate('/signin');
       }
     } catch (err) {

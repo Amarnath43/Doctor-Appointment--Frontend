@@ -42,7 +42,7 @@ const Signin = () => {
     const response = await AxiosInstances.post('/user/signin', payload);
     const role = response?.data?.role === 'doctor' ? 'doctor' : 'user';
     toast.success(response?.data?.message || 'OTP sent to your email');
-    localStorage.setItem('authEmail', payload.email);
+    sessionStorage.setItem('authEmail', payload.email);
     navigate('/verify-otp', { state: { role, isLoginFlow: true } });
   } catch (e) {
     if (e.response?.data) {

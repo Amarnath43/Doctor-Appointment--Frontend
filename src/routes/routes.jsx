@@ -31,7 +31,6 @@ import AppointmentHistoryAdmin from '../pages/Admin/AppointmentHistoryAdmin';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage'
 import VerifyOtpPage from '../pages/VerifyOtpPage';
-import VerifyDoctorOtp from '../pages/VerifyDoctorOTP';
 import DoctorHomePage from '../pages/doctor/DoctorHomePage';
 import AdminHomepage from '../pages/Admin/AdminHomePage';
 import DoctorReviewsPanel from '../pages/doctor/DoctorReviewsPanel';
@@ -43,7 +42,6 @@ const appRoutes = [
   { path: '/signin', element: <GuestOnly><Signin /></GuestOnly> },
   { path: '/user/register', element: <GuestOnly><RegisterUser /></GuestOnly> },
   { path: '/doctor/register', element: <GuestOnly><RegisterDoctor /></GuestOnly> },
-  { path: '/verify-doctor-otp', element: <GuestOnly><VerifyDoctorOtp /></GuestOnly> },
   { path: '/forgot-password', element: <GuestOnly><ForgotPasswordPage /></GuestOnly> },
   { path: '/reset-password', element: <GuestOnly><ResetPasswordPage /></GuestOnly> },
   { path: '/verify-otp', element: <GuestOnly><VerifyOtpPage /></GuestOnly> },

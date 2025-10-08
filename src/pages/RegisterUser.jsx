@@ -22,9 +22,9 @@ const Signup = () => {
         try {
             const response = await AxiosInstances.post('/user/register', data);
             toast.success(response?.data?.message || 'OTP sent to your email');
-            localStorage.setItem('authEmail', data.email);
+            sessionStorage.setItem('authEmail', data.email);
             reset();
-            navigate('/verify-otp', { state: { isLoginFlow: false } });
+            navigate('/verify-otp', { state: {role:'user', isLoginFlow: false } });
         } catch (e) {
             console.error(e);
             toast.error(e.response?.data?.message || 'An unexpected error occurred.');
