@@ -14,6 +14,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
+import { makePublicUrlFromKey } from '../utils/s3PublicUrl';
 
 const NavBar = () => {
   const [isButtonOpen, setIsButtonOpen] = useState(false);
@@ -24,9 +25,9 @@ const NavBar = () => {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
-  
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ const NavBar = () => {
       isOpen: false,
       title: '',
       message: '',
-      onConfirm: () => {},
+      onConfirm: () => { },
     });
   };
   const handleLogout = () => {
@@ -133,7 +134,7 @@ const NavBar = () => {
             src="/xy.png"
             alt="Quick MediLink Logo"
             className="object-contain w-full h-full"
-            onClick={()=>navigate('/')}
+            onClick={() => navigate('/')}
           />
         </div>
       </div>
@@ -151,8 +152,8 @@ const NavBar = () => {
                     key={label}
                     onClick={() => navigate(path)}
                     className={`text-lg font-semibold flex items-center transition-all ${isActive
-                        ? 'text-blue-700 underline underline-offset-4'
-                        : 'hover:underline'
+                      ? 'text-blue-700 underline underline-offset-4'
+                      : 'hover:underline'
                       }`}
                   >
                     {React.cloneElement(icon, { size: 18 })}
@@ -170,9 +171,14 @@ const NavBar = () => {
           {user && (
             <Dropdown menu={{ items: getDropdownItems() }}>
               <button
-                className="w-10 h-10 rounded-full bg-blue-900 text-white font-bold text-lg"
+                className="w-10 h-10 rounded-full bg-blue-900 text-white font-bold text-lg overflow-hidden"
                 aria-label="User Menu"
               >
+                <img src={makePublicUrlFromKey(user.profilePicture) ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    user?.name
+                  )}&background=random`
+                } alt={user.name} className='rounded-full object-cover' />
                 {user.name.charAt(0).toUpperCase()}
               </button>
             </Dropdown>
@@ -199,7 +205,7 @@ const NavBar = () => {
           {/* Hamburger / X Toggle for mobile (only for logged-out users) */}
           {!user && (
             <div className="lg:hidden">
-               <button
+              <button
                 onClick={() => setIsButtonOpen(!isButtonOpen)}
                 aria-label={isButtonOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={isButtonOpen}
@@ -235,8 +241,8 @@ const NavBar = () => {
                     setIsButtonOpen(false);
                   }}
                   className={`text-left text-lg font-medium flex items-center ${isActive
-                      ? 'text-blue-700 underline underline-offset-4'
-                      : 'hover:underline'
+                    ? 'text-blue-700 underline underline-offset-4'
+                    : 'hover:underline'
                     }`}
                 >
                   {icon}

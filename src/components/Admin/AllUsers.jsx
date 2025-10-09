@@ -3,6 +3,7 @@ import { UserCheck, UserX, Loader2, Search, Users, Filter, ChevronDown, Calendar
 import AxiosInstances from '../../apiManager';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
+import { makePublicUrlFromKey } from '../../utils/s3PublicUrl';
 
 // Helper function for CSS classes
 const classNames = (...classes) => {
@@ -172,7 +173,9 @@ const AllUsers = () => {
                                 <div className="flex items-start gap-4">
                                     <div className="relative flex-shrink-0">
                                         <img
-                                            src={user.profilePicture || 'https://placehold.co/100x100'}
+                                            src={makePublicUrlFromKey(user.profilePicture) || `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                                user.name
+                                            )}&background=random`}
                                             alt={user.name}
                                             className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow"
                                         />

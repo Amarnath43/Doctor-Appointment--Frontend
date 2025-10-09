@@ -242,24 +242,25 @@ const HospitalPage = () => {
 
             {/* --- Right Column (Data) --- */}
             <div className="p-8">
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
-                <div className="mb-4 lg:mb-0">
-                  <div className="flex items-center mb-2">
-                    <h1 className="text-3xl font-bold text-gray-900 mr-4">{hospital.name}</h1>
-                    {
-
-                      typeof hospital.ratingAvg !== 'undefined' && (
-                        <div className="flex items-center">
-                          <span className="text-2xl font-bold text-gray-900 mr-2">{hospital.rating}</span>
-                          {renderStars(hospital.ratingAvg)}
-                          {typeof hospital.ratingCount !== 'undefined' && (
-                            <span className="text-gray-600 ml-2">({hospital.ratingCount} reviews)</span>
-                          )}
-                        </div>
+              <div className="mb-6">
+                <h1 className=" text-lg sm:text-2xl font-bold text-gray-900 mb-2">{hospital.name}</h1>
+                {
+                  
+                  
+                  typeof hospital.ratingAvg !== 'undefined' && (
+                    <div className="flex items-center ">
+                      <span className='text-sm text-gray-600'>{hospital.ratingAvg}</span>
+                      <span className="text-2xl font-bold text-gray-900 mr-1">{hospital.rating}</span>
+                      {renderStars(hospital.ratingAvg)
+                      }
+                      
+                      {typeof hospital.ratingCount !== 'undefined' && (
+                        <span className="text-gray-600 ml-2">({hospital.ratingCount} reviews)</span>
                       )}
-                  </div>
-                </div>
+                    </div>
+                  )}
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Location</h3>
@@ -290,7 +291,7 @@ const HospitalPage = () => {
 
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Tests</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-6">Available Tests</h2>
           <div className="flex flex-wrap gap-3">
             {availableTests.map((name, i) => (
               <span key={i} className="px-4 py-2 border border-blue-200 text-blue-700 rounded-full bg-blue-50/40 font-medium">
@@ -301,7 +302,7 @@ const HospitalPage = () => {
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Doctors</h2>
+            <h2 className=" text-lg sm:text-2xl font-bold text-gray-900">Doctors</h2>
           </div>
           <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {limitedDoctors.map((doctor) => (
@@ -338,7 +339,7 @@ const HospitalPage = () => {
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Patient Reviews</h2>
+            <h2 className=" text-lg sm:text-2xl font-bold text-gray-900">Patient Reviews</h2>
             {!!previewTotal && (
               <button
                 onClick={() => setReviewsModalOpen(true)}

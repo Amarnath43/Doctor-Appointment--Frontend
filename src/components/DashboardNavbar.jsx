@@ -6,9 +6,11 @@ import useUserStore from '../store/user';
 import { removeToken } from '../helper';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { useState } from 'react';
-import {LayoutDashboard,
+import {
+  LayoutDashboard,
   LogOut,
 } from 'lucide-react';
+import { makePublicUrlFromKey } from '../utils/s3PublicUrl';
 
 const DashboardNavbar = ({ onSidebarToggle }) => {
   const { user, clearUser } = useUserStore();
@@ -77,7 +79,7 @@ const DashboardNavbar = ({ onSidebarToggle }) => {
             handleLogout
           )
       }
-      className='flex gap-2 items-center'
+        className='flex gap-2 items-center'
       ><LogOut size={16} className="mr-2" />
         Logout</span>,
     },
@@ -98,7 +100,7 @@ const DashboardNavbar = ({ onSidebarToggle }) => {
 
         {/* Logo + Title */}
         <div className="flex items-center gap-2">
-          <img src="/xy.png" alt="Quick MediLink" className="h-10 w-auto" onClick={()=>navigate('/')}/>
+          <img src="/xy.png" alt="Quick MediLink" className="h-10 w-auto" onClick={() => navigate('/')} />
 
         </div>
       </div>
@@ -110,7 +112,12 @@ const DashboardNavbar = ({ onSidebarToggle }) => {
             className="w-10 h-10 rounded-full bg-blue-900 text-white font-semibold text-lg flex items-center justify-center"
             aria-label="User Menu"
           >
-            {user.name?.charAt(0).toUpperCase()}
+            <img src={makePublicUrlFromKey(user.profilePicture) ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                user?.name
+              )}&background=random`
+            } alt={user.name} className='rounded-full object-cover' />
+            
           </button>
         </Dropdown>
       )}

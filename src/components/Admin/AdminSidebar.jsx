@@ -19,6 +19,12 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-md hover:transform hover:scale-[1.01] font-medium'
     }`;
 
+     const handleLinkClick = () => {
+    if (isOpen) {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -68,71 +74,71 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
           </h3>
 
           {/* Dashboard */}
-          <div className="space-y-2">
-          <NavLink to="/admin/home" className={linkClass}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
-              <Home size={18} />
-            </div>
-            Home
-          </NavLink>
-          <NavLink to="/admin/dashboard/analytics" className={linkClass}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
-              <ChartNoAxesCombined size={18} />
-            </div>
-            Analytics
-          </NavLink>
+          <div className="space-y-2" onClick={handleLinkClick}>
+            <NavLink to="/admin/home" className={linkClass}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
+                <Home size={18} />
+              </div>
+              Home
+            </NavLink>
+            <NavLink to="/admin/dashboard/analytics" className={linkClass}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-orange-100 to-amber-100 flex items-center justify-center">
+                <ChartNoAxesCombined size={18} />
+              </div>
+              Analytics
+            </NavLink>
 
 
 
-          <NavLink to="/admin/dashboard/manage-entities" className={linkClass}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-yellow-100 to-amber-100 flex items-center justify-center">
-              <ClipboardList size={18} />
-            </div>
-            Pending Doctors/Hospitals
-          </NavLink>
+            <NavLink to="/admin/dashboard/manage-entities" className={linkClass}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-yellow-100 to-amber-100 flex items-center justify-center">
+                <ClipboardList size={18} />
+              </div>
+              Pending Doctors/Hospitals
+            </NavLink>
 
 
 
-          <NavLink to="/admin/dashboard/allusers" className={linkClass}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
-              <Users size={18} />
-            </div>
-            All Users
-          </NavLink>
+            <NavLink to="/admin/dashboard/allusers" className={linkClass}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+                <Users size={18} />
+              </div>
+              All Users
+            </NavLink>
 
 
 
-          <NavLink to="/admin/dashboard/hospital-list" className={linkClass}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-green-100 to-emerald-100 flex items-center justify-center">
-              <Building2 size={18} />
-            </div>
-            Add/Update Hospital
-          </NavLink>
+            <NavLink to="/admin/dashboard/hospital-list" className={linkClass}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-green-100 to-emerald-100 flex items-center justify-center">
+                <Building2 size={18} />
+              </div>
+              Add/Update Hospital
+            </NavLink>
 
 
 
-          <NavLink to="/admin/dashboard/appointment-history" className={linkClass}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-100 to-violet-100 flex items-center justify-center">
-              <CalendarClock size={18} />
-            </div>
-            Appointment History
-          </NavLink>
+            <NavLink to="/admin/dashboard/appointment-history" className={linkClass}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-100 to-violet-100 flex items-center justify-center">
+                <CalendarClock size={18} />
+              </div>
+              Appointment History
+            </NavLink>
 
 
-          <NavLink to="/admin/dashboard/reviews" className={linkClass}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-100 to-rose-100 flex items-center justify-center">
-              <Star size={18} />
-            </div>
-            All Reviews
-          </NavLink>
+            <NavLink to="/admin/dashboard/reviews" className={linkClass}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-100 to-rose-100 flex items-center justify-center">
+                <Star size={18} />
+              </div>
+              All Reviews
+            </NavLink>
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
+          <p className="text-xs text-gray-500 text-center">© 2025 QuickMediLink</p>
         </div>
-      </nav>
-
-      {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-slate-50">
-        <p className="text-xs text-gray-500 text-center">© 2025 QuickMediLink</p>
-      </div>
-    </aside >
+      </aside >
     </>
   );
 };

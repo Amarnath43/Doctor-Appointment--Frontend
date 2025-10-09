@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   User,
@@ -17,10 +17,9 @@ const UserSidebar = ({ isOpen, setIsOpen }) => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(true); // Controls collapse
 
   const linkClass = ({ isActive }) =>
-    `flex items-center gap-3 px-2 py-3 rounded-lg transition-all duration-200 group ${
-      isActive
-        ? ' shadow transform scale-[1.02]'
-        : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-md hover:transform hover:scale-[1.01] font-medium'
+    `flex items-center gap-3 px-2 py-3 rounded-lg transition-all duration-200 group ${isActive
+      ? ' shadow transform scale-[1.02]'
+      : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-md hover:transform hover:scale-[1.01] font-medium'
     }`;
 
   return (
@@ -91,28 +90,28 @@ const UserSidebar = ({ isOpen, setIsOpen }) => {
               {isHistoryOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
             </button>
 
-           {isHistoryOpen && (
- <div className="ml-6 mt-2 space-y-1">
-   <NavLink to="appointment-history/upcoming" className={linkClass} onClick={() => setIsOpen(false)}>
-     <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm hover:from-green-100 hover:to-emerald-100 transition-all">
-       <CalendarCheck size={16} className="text-green-600" />
-       <span className="text-sm font-medium">Upcoming</span>
-     </div>
-   </NavLink>
-   <NavLink to="appointment-history/past" className={linkClass} onClick={() => setIsOpen(false)}>
-     <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg shadow-sm hover:from-purple-100 hover:to-violet-100 transition-all">
-       <Clock size={16} className="text-purple-600" />
-       <span className="text-sm font-medium">Past</span>
-     </div>
-   </NavLink>
-   <NavLink to="appointment-history/cancelled" className={linkClass} onClick={() => setIsOpen(false)}>
-     <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-rose-50 to-red-50 rounded-lg shadow-sm hover:from-rose-100 hover:to-red-100 transition-all">
-       <XCircle size={16} className="text-rose-600" />
-       <span className="text-sm font-medium">Cancelled</span>
-     </div>
-   </NavLink>
- </div>
-)}
+            {isHistoryOpen && (
+              <div className="ml-6 mt-2 space-y-1">
+                <NavLink to="appointment-history/upcoming" className={linkClass} onClick={() => setIsOpen(false)}>
+                  <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-sm hover:from-green-100 hover:to-emerald-100 transition-all">
+                    <CalendarCheck size={16} className="text-green-600" />
+                    <span className="text-sm font-medium">Upcoming</span>
+                  </div>
+                </NavLink>
+                <NavLink to="appointment-history/past" className={linkClass} onClick={() => setIsOpen(false)}>
+                  <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg shadow-sm hover:from-purple-100 hover:to-violet-100 transition-all">
+                    <Clock size={16} className="text-purple-600" />
+                    <span className="text-sm font-medium">Past</span>
+                  </div>
+                </NavLink>
+                <NavLink to="appointment-history/cancelled" className={linkClass} onClick={() => setIsOpen(false)}>
+                  <div className="flex items-center gap-2 px-3 py-2 w-full bg-gradient-to-r from-rose-50 to-red-50 rounded-lg shadow-sm hover:from-rose-100 hover:to-red-100 transition-all">
+                    <XCircle size={16} className="text-rose-600" />
+                    <span className="text-sm font-medium">Cancelled</span>
+                  </div>
+                </NavLink>
+              </div>
+            )}
 
           </div>
 
@@ -126,7 +125,7 @@ const UserSidebar = ({ isOpen, setIsOpen }) => {
             </NavLink>
           </div>
 
-          
+
         </nav>
 
         {/* Footer */}

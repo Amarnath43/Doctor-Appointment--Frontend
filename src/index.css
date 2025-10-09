@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/* iOS date input fixes */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: 1.2;
+  font-size: 16px; /* prevents iOS zoom & helps layout */
+  min-height: 2.5rem;
+  width: 100%;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}

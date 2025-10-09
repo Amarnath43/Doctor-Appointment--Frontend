@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import AxiosInstances from '../../apiManager';
-import useUserStore from '../../store/user';
 import { X, Camera, Lock, Eye, EyeOff, AlertCircle, Trash2, Loader2 } from 'lucide-react';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ImageCropper from '../../components/Cropper';
@@ -20,7 +19,6 @@ const EditProfileForm = ({ initialData, onClose, onProfileUpdated }) => {
   const [isCloseModalOpen, setCloseModalOpen] = useState(false);
   const fileInputRef = useRef(null);
 
-  const { setUser } = useUserStore();
 
   const {
     register,
@@ -147,11 +145,10 @@ const EditProfileForm = ({ initialData, onClose, onProfileUpdated }) => {
       const response = await AxiosInstances.put('/doctor/edit-profile', payload);
       const newData = response.data.user;
       
-      setUser(newData);
       toast.success('Profile updated successfully!');
       if (onProfileUpdated) onProfileUpdated(newData);
       
-      setTimeout(() => onClose(), 1000);
+      setTimeout(() => onClose(), 1500);
     } catch (err) {
       console.error('Update Profile Error:', err);
       toast.error(err.response?.data?.message || 'Failed to update profile');
@@ -168,6 +165,8 @@ const EditProfileForm = ({ initialData, onClose, onProfileUpdated }) => {
       onClose();
     }
   };
+
+  const inputBase = 'mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
@@ -196,7 +195,7 @@ const EditProfileForm = ({ initialData, onClose, onProfileUpdated }) => {
         </div>
       )}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose}/>
-      <div className="relative flex flex-col max-h-[95vh] w-full max-w-4xl animate-slide-up overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div className="relative flex flex-col max-h-[80vh] sm:max-h-[90vh] w-full max-w-4xl animate-slide-up overflow-hidden rounded-3xl bg-white shadow-2xl">
         <div className="flex-shrink-0 px-5 py-3.5 border-b border-gray-200 flex items-center justify-between bg-gray-800">
           <h2 className="text-md font-semibold text-white">Edit Profile</h2>
           <button onClick={handleClose} disabled={isLoading} className="text-white p-1 rounded-full hover:bg-gray-700">
@@ -219,7 +218,6 @@ const EditProfileForm = ({ initialData, onClose, onProfileUpdated }) => {
                 <input type="file" accept="image/*" id="profilePicture" onChange={handleFileChange} ref={fileInputRef} className="hidden" />
               </div>
               <div className="mt-3 flex items-center justify-center gap-3">
-                {/* BUG FIX 2: Conditional "Add"/"Replace" text */}
                 <label htmlFor="profilePicture" className="cursor-pointer inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm transition hover:bg-gray-50">
                   <Camera className="h-4 w-4" />
                   {previewImage ? 'Replace' : 'Add Photo'}
@@ -269,11 +267,72 @@ const EditProfileForm = ({ initialData, onClose, onProfileUpdated }) => {
                   <Lock className="w-3 h-3 text-gray-500" /> Change Password
                 </label>
               </div>
-              {changePassword && (
-                <div className="space-y-3 pl-5 border-l-2 border-yellow-200">
-                  {/* Password fields here... */}
-                </div>
-              )}
+             {changePassword && (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Current Password</label>
+                      <div className="relative">
+                        <input
+                          type={showOldPassword ? 'text' : 'password'}
+                          className={inputBase + ' pr-9'}
+                          {...register('oldPassword', validationRules.oldPassword)}
+                          placeholder="Current password"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:bg-gray-100"
+                          onClick={() => setShowOldPassword(v => !v)}
+                          aria-label="Toggle current password visibility"
+                        >
+                          {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {errors.oldPassword && <p className="mt-1 text-xs text-red-600">{errors.oldPassword.message}</p>}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">New Password</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          className={inputBase + ' pr-9'}
+                          {...register('newPassword', validationRules.newPassword)}
+                          placeholder="New password"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:bg-gray-100"
+                          onClick={() => setShowNewPassword(v => !v)}
+                          aria-label="Toggle new password visibility"
+                        >
+                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {errors.newPassword && <p className="mt-1 text-xs text-red-600">{errors.newPassword.message}</p>}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          className={inputBase + ' pr-9'}
+                          {...register('confirmPassword', validationRules.confirmPassword)}
+                          placeholder="Confirm password"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:bg-gray-100"
+                          onClick={() => setShowConfirmPassword(v => !v)}
+                          aria-label="Toggle confirm password visibility"
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>}
+                    </div>
+                  </div>
+                )}
             </div>
           </div>
 
