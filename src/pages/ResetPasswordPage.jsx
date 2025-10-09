@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import AxiosInstances from '../apiManager';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -37,9 +38,9 @@ const ResetPasswordPage = () => {
     if (!email) return;
 
     try {
-      await axios.post('/api/user/forgot-password/send-otp', { email });
+      await AxiosInstances.post('/user/forgot-password/send-otp', { email });
       toast.success('OTP resent to your email.');
-      setResendCooldown(60); // 🔁 60-second cooldown
+      setResendCooldown(60); // 60-second cooldown
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to resend OTP');
     }
@@ -60,7 +61,7 @@ const ResetPasswordPage = () => {
     setIsSubmitting(true);
 
     try {
-      await axios.post('/api/auth/forgot-password/verify', {
+      await AxiosInstances.post('/user/forgot-password/verify', {
         email,
         otp,
         newPassword,
@@ -68,7 +69,7 @@ const ResetPasswordPage = () => {
 
       toast.success('Password reset successful. Please log in.');
       localStorage.removeItem('resetEmail');
-      navigate('/login');
+      navigate('/signin');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to reset password');
     } finally {

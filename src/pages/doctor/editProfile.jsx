@@ -20,7 +20,7 @@ const DoctorProfile = () => {
   const { setUser } = useUserStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const { data: user, error, isLoading } = useSWR('/doctor/me', fetcher);
+  const { data: user, error, isLoading } = useSWR('/doctor/profile', fetcher);
 
   useEffect(() => {
     if (user) {
@@ -42,7 +42,7 @@ const DoctorProfile = () => {
 
   const handleProfileUpdated = (updatedUser) => {
     setUser(updatedUser);
-    mutate('/doctor/me', { ...user, ...updatedUser }, false); // Optimistically update and prevent re-fetch
+    mutate('/doctor/profile', { ...user, ...updatedUser }, false); // Optimistically update and prevent re-fetch
     setIsEditModalOpen(false);
   };
   
