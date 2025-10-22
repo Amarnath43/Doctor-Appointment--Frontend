@@ -5,10 +5,12 @@ import { Loader2 } from 'lucide-react';
 import AxiosInstances from '../apiManager';
 import NavBar from '../components/NavBar';
 import { toast } from 'react-hot-toast';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Signup = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         register,
@@ -24,7 +26,7 @@ const Signup = () => {
             toast.success(response?.data?.message || 'OTP sent to your email');
             sessionStorage.setItem('authEmail', data.email);
             reset();
-            navigate('/verify-otp', { state: {role:'user', isLoginFlow: false } });
+            navigate('/verify-otp', { state: { role: 'user', isLoginFlow: false } });
         } catch (e) {
             console.error(e);
             toast.error(e.response?.data?.message || 'An unexpected error occurred.');
@@ -48,9 +50,8 @@ const Signup = () => {
                             <input
                                 type="text"
                                 placeholder='Full Name'
-                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                                    errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
-                                }`}
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                    }`}
                                 {...register("name", { required: "Name is required" })}
                             />
                             {errors.name && <p className='mt-1 text-xs text-red-600'>{errors.name.message}</p>}
@@ -60,9 +61,8 @@ const Signup = () => {
                             <input
                                 type="email"
                                 placeholder='Email Address'
-                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                                    errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
-                                }`}
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                    }`}
                                 {...register("email", {
                                     required: "Email is required",
                                     pattern: {
@@ -78,9 +78,8 @@ const Signup = () => {
                             <input
                                 type="tel"
                                 placeholder='Phone Number'
-                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                                    errors.phone ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
-                                }`}
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.phone ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                    }`}
                                 {...register("phone", {
                                     required: "Phone number is required",
                                     pattern: {
@@ -92,13 +91,12 @@ const Signup = () => {
                             {errors.phone && <p className='mt-1 text-xs text-red-600'>{errors.phone.message}</p>}
                         </div>
 
-                        <div className='mb-6'>
+                        <div className='mb-6 relative'>
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 placeholder='Password'
-                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                                    errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
-                                }`}
+                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                                    }`}
                                 {...register("password", {
                                     required: "Password is required",
                                     minLength: {
@@ -107,13 +105,22 @@ const Signup = () => {
                                     }
                                 })}
                             />
+
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="absolute top-1/2 right-3 -translate-y-1/2 text-xl text-gray-500 focus:outline-none"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
                             {errors.password && <p className='mt-1 text-xs text-red-600'>{errors.password.message}</p>}
                         </div>
 
                         <button
                             type='submit'
                             disabled={isLoading}
-                            className='h-12 px-4 text-white bg-green-600 font-bold rounded-lg w-full mb-4 hover:bg-green-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed'
+                            className='h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mb-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed'
                         >
                             {isLoading ? (
                                 <div className='flex items-center justify-center gap-2'>
@@ -124,10 +131,10 @@ const Signup = () => {
                                 'Sign Up'
                             )}
                         </button>
-                        
+
                         <p className='text-center text-gray-600'>
                             Already have an account?
-                            <NavLink to="/signin" className="text-green-600 font-semibold hover:underline ml-1">
+                            <NavLink to="/signin" className="text-blue-600 font-semibold hover:underline ml-1">
                                 Sign In
                             </NavLink>
                         </p>

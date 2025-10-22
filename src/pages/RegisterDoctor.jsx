@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import AxiosInstances from '../apiManager';
 import NavBar from '../components/NavBar';
 import { toast } from 'react-hot-toast';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 /** Simple debounce hook */
 function useDebounced(value, delay = 300) {
@@ -19,7 +20,7 @@ function useDebounced(value, delay = 300) {
 const Signup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
   const [loadingHospitals, setLoadingHospitals] = useState(false);
   const [hospitalMatches, setHospitalMatches] = useState([]);
   const [showAddNewHospital, setShowAddNewHospital] = useState(false);
@@ -198,7 +199,6 @@ const Signup = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input type="hidden" {...register('hospitalId')} />
 
-              {/* Personal Info */}
               <InputField
                 name="name"
                 placeholder="Full Name"
@@ -231,21 +231,36 @@ const Signup = () => {
                   pattern: { value: /^[6-9][0-9]{9}$/, message: 'Invalid phone number' },
                 }}
               />
-              <InputField
-                name="password"
-                type="password"
-                placeholder="Password"
-                errors={errors}
-                register={register}
-                rules={{
-                  required: 'Password is required',
-                  minLength: { value: 8, message: 'At least 8 characters' },
-                  validate: {
-                    hasNum: (v) => /\d/.test(v) || 'Include a number',
-                    hasLetter: (v) => /[A-Za-z]/.test(v) || 'Include a letter',
-                  },
-                }}
-              />
+              <div className=' relative'>
+                <InputField
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  errors={errors}
+                  register={register}
+                  rules={{
+                    required: 'Password is required',
+                    minLength: { value: 8, message: 'At least 8 characters' },
+                    validate: {
+                      hasNum: (v) => /\d/.test(v) || 'Include a number',
+                      hasLetter: (v) => /[A-Za-z]/.test(v) || 'Include a letter',
+                    },
+                  }}
+                  endAdornment={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="text-xl text-gray-500 focus:outline-none"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  }
+                />
+               
+              </div>
+
               <InputField
                 name="specialization"
                 placeholder="Specialization"
@@ -285,9 +300,8 @@ const Signup = () => {
                 <textarea
                   placeholder="Short Bio"
                   rows={2}
-                  className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 resize-none ${
-                    errors.bio ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 resize-none ${errors.bio ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
+                    }`}
                   {...register('bio', { required: 'Bio is required' })}
                 />
                 {errors.bio && <p className="mt-1 text-xs text-red-600">{errors.bio.message}</p>}
@@ -327,9 +341,8 @@ const Signup = () => {
                         <li
                           key={h._id}
                           onMouseDown={() => pickHospital(h)}
-                          className={`px-4 py-2 text-sm text-gray-800 cursor-pointer ${
-                            activeIndex === idx ? 'bg-gray-100' : 'hover:bg-gray-100'
-                          }`}
+                          className={`px-4 py-2 text-sm text-gray-800 cursor-pointer ${activeIndex === idx ? 'bg-gray-100' : 'hover:bg-gray-100'
+                            }`}
                           role="option"
                           aria-selected={activeIndex === idx}
                           onMouseEnter={() => setActiveIndex(idx)}
@@ -411,7 +424,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="h-12 px-4 text-white bg-green-600 font-bold rounded-lg w-full mt-4 hover:bg-green-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mt-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -425,7 +438,7 @@ const Signup = () => {
 
             <p className="text-center text-gray-600">
               Already have an account?
-              <NavLink to="/signin" className="text-green-600 font-semibold hover:underline ml-1">
+              <NavLink to="/signin" className="text-blue-600 font-semibold hover:underline ml-1">
                 Sign In
               </NavLink>
             </p>
@@ -436,29 +449,55 @@ const Signup = () => {
   );
 };
 
-// Reusable Input Field component for cleaner form code
 const InputField = ({
   name,
   type = 'text',
   placeholder,
-  errors,
+  errors = {},
   register,
   rules,
   className = '',
+  endAdornment, // ⬅️ new: pass a button/icon here
+  inputClassName = '',
   ...props
-}) => (
-  <div className={className}>
-    <input
-      type={type}
-      placeholder={placeholder}
-      className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${
-        errors[name] ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
-      }`}
-      {...register(name, rules)}
-      {...props}
-    />
-    {errors[name] && <p className="mt-1 text-xs text-red-600">{errors[name].message}</p>}
-  </div>
-);
+}) => {
+  const hasError = Boolean(errors?.[name]);
+
+  return (
+    <div className={className}>
+      {/* Wrap ONLY the input and the icon in a relative box */}
+      <div className="relative">
+        <input
+          type={type}
+          placeholder={placeholder}
+          className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2
+            ${hasError ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'}
+            pr-10  /* reserve room for the eye */ 
+            ${inputClassName}`}
+          {...register(name, rules)}
+          {...props}
+        />
+
+        {/* Absolutely position the toggle inside the input's box */}
+        {endAdornment && (
+          <div
+            className="absolute inset-y-0 right-3 flex items-center"
+          /* inset-y-0 + flex centers it vertically by the input's height, 
+             not the container that grows with the error text */
+          >
+            {endAdornment}
+          </div>
+        )}
+      </div>
+
+      {hasError && (
+        <p className="mt-1 text-xs text-red-600">
+          {errors[name].message}
+        </p>
+      )}
+    </div>
+  );
+};
+
 
 export default Signup;

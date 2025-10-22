@@ -287,7 +287,6 @@ const HospitalPage = () => {
               {hospital.description && <p className="text-gray-700 leading-relaxed">{hospital.description}</p>}
             </div>
           </div>
-          {/* --- END MODIFICATION --- */}
 
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
