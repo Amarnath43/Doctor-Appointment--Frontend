@@ -4,6 +4,7 @@ import AxiosInstances from '../../apiManager/index';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays } from 'date-fns';
 import { Download } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
 const PAGE_SIZE = 10; // keep in sync with backend
@@ -86,7 +87,12 @@ const AppointmentHistoryAdmin = () => {
   };
 
   const toggleStatus = (s) =>
-    setStatusFilter((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  {
+    console.log('Toggling status filter:', s);
+     setStatusFilter((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+
+  }
+   
 
   const clearFilters = () => {
     setStatusFilter([]);
@@ -94,6 +100,26 @@ const AppointmentHistoryAdmin = () => {
     setStartDate(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
     setEndDate(format(new Date(), 'yyyy-MM-dd')); // ✅ today
   };
+
+  // inside AppointmentHistoryAdmin component
+
+const handleStatusChange = async (id, newStatus) => {
+  try {
+    // optimistic UI update
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
+
+    // call API (adjust endpoint & payload)
+    await AxiosInstances.put(`/doctor/appointments/${id}/status`, { status: newStatus });
+    
+toast.success(`Appointment status updated to ${newStatus}`);
+    // optionally re-fetch or show toast
+  } catch (err) {
+    console.error('Failed to update status', err);
+    // revert on failure
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: appointments.find(x => x.id === id)?.status ?? a.status } : a));
+  }
+};
+
 
   return (
     <div className="max-w-7xl mx-auto p-2 space-y-6">
@@ -178,7 +204,7 @@ const AppointmentHistoryAdmin = () => {
                 onClick={() => navigate(`/appointment/${appt.id}`)}
                 className="cursor-pointer"
               >
-                <AppointmentCard appointment={appt} index={serial} role="admin" />
+                <AppointmentCard appointment={appt} index={serial} role="admin" onStatusChange={handleStatusChange} />
               </div>
             );
           })

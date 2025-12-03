@@ -98,7 +98,8 @@ const Signin = () => {
                             )}
                         </div>
 
-                        <div className='mb-4 relative'>
+                        <div className='mb-4 '>
+                            <div className='relative'>
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder='Password'
@@ -122,6 +123,7 @@ const Signin = () => {
                             >
                                 {showPassword ? <FaEyeSlash /> : <FaEye />}
                             </button>
+                            </div>
                             {(errors.password || serverError.password) && (
                                 <p className='mt-1 text-xs text-red-600'>
                                     {errors.password?.message || serverError.password}
@@ -133,7 +135,7 @@ const Signin = () => {
                         <button
                             type='submit'
                             disabled={isLoading}
-                            className='h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mt-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed'
+                            className='h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mt-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-300 disabled:cursor-not-allowed'
                         >
                             {isLoading ? (
                                 <div className='flex items-center justify-center gap-2'>

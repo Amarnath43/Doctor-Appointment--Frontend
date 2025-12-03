@@ -80,7 +80,8 @@ const ResetPasswordPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow p-6">
-        <h2 className="text-2xl font-semibold text-center mb-4">Reset Your Password</h2>
+        <h2 className="text-2xl font-semibold text-center ">Reset Your Password</h2>
+        <p className='mb-4 text-sm text-center'>OTP has been sent to <span className="font-medium text-green-600">{email}</span></p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"

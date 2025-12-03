@@ -367,7 +367,9 @@ const DoctorDetails = () => {
               <div>
                 <h2 className="text-base font-semibold text-gray-800">About Dr. {doctor?.userId?.name.split(' ').pop()}</h2>
                 <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                  Dr. Davis has a strong commitment to delivering comprehensive medical care, focusing on preventive medicine, early diagnosis, and effective treatment strategies.
+                 {
+                  doctor?.bio || 'No biography available for this doctor at the moment.'
+                 }
                 </p>
                 <div className="mt-5 flex items-center justify-between rounded-lg bg-gray-100 px-4 py-3">
                   <span className="text-sm font-medium text-gray-600">Appointment Fee</span>

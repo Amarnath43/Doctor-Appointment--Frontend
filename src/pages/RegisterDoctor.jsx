@@ -424,7 +424,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mt-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mt-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>

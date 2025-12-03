@@ -190,7 +190,7 @@ const HospitalPage = () => {
     </div>
   }
 
-  const availableTests = ['Blood Test', 'MRI Scan', 'CT Scan', 'X-Ray', 'COVID-19 Test'];
+  const availableTests = hospital?.availableTests?.map((test) => test.name) || [];
   const totalImages = hospital?.images?.length || 0;
   const nextImage = () => setSelectedImageIndex((i) => (i + 1) % totalImages);
   const prevImage = () => setSelectedImageIndex((i) => (i - 1 + totalImages) % totalImages);
@@ -289,7 +289,8 @@ const HospitalPage = () => {
           </div>
 
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+        {
+          availableTests.length > 0 && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
           <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-6">Available Tests</h2>
           <div className="flex flex-wrap gap-3">
             {availableTests.map((name, i) => (
@@ -299,6 +300,7 @@ const HospitalPage = () => {
             ))}
           </div>
         </div>
+        }
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className=" text-lg sm:text-2xl font-bold text-gray-900">Doctors</h2>

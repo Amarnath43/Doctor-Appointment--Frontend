@@ -65,7 +65,7 @@ const AdminApprovalPanel = () => {
         try {
             await AxiosInstances.patch(`/admin/updateHospitalstatus/${id}`, { status });
             fetchHospitals();
-            toast(`Status of Hospital updated to ${status}`)
+            toast.success(`Status of Hospital updated to ${status}`)
         } catch (err) {
             console.error('Error updating hospital status', err);
         }
@@ -225,7 +225,7 @@ const AdminApprovalPanel = () => {
                                                         onClick={() => toggleDoctorStatus(doc._id, 'active')}
                                                     >
                                                         <UserCheck className="h-4 w-4" />
-                                                        Activate
+                                                        Set Active
                                                     </button>
                                                     <button
                                                         className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-700 font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
@@ -300,7 +300,7 @@ const AdminApprovalPanel = () => {
                                                         onClick={() => toggleHospitalStatus(hosp._id, 'active')}
                                                     >
                                                         <CheckCircle className="h-4 w-4" />
-                                                        Activate
+                                                        Set Active
                                                     </button>
                                                     <button
                                                         className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-600  font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"

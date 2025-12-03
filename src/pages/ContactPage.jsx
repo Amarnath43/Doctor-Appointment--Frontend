@@ -21,21 +21,21 @@ const ContactPage = () => {
               <Mail className="text-blue-600 w-5 h-5 mt-1" />
               <div>
                 <p className="font-semibold text-gray-800">Email</p>
-                <p className="text-sm text-gray-600">support@quickmedilink.com</p>
+                <p className="text-sm text-gray-600">support@quickmedilink.online</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Phone className="text-blue-600 w-5 h-5 mt-1" />
               <div>
                 <p className="font-semibold text-gray-800">Phone</p>
-                <p className="text-sm text-gray-600">+91 98765 43210</p>
+                <p className="text-sm text-gray-600">+91 77805 79811</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <MapPin className="text-blue-600 w-5 h-5 mt-1" />
               <div>
                 <p className="font-semibold text-gray-800">Address</p>
-                <p className="text-sm text-gray-600">123 Health Street, Bengaluru, India</p>
+                <p className="text-sm text-gray-600">Shivaji Nagar, Choutuppal, Telangana, India</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

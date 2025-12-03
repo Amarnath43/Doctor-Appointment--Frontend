@@ -108,7 +108,7 @@ const VerifyOtpPage = () => {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-md p-6">
         <h2 className="text-2xl font-semibold text-center mb-2">Enter OTP</h2>
         <p className="text-center text-sm text-gray-500 mb-4">
-          We&apos;ve sent an OTP to your email. Enter it below to continue.
+          We&apos;ve sent an OTP to your email <span className="font-medium text-green-600">{email}</span>. Enter it below to continue.
         </p>
         <form onSubmit={handleVerify} className="space-y-4">
           <input

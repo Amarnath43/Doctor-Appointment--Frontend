@@ -91,36 +91,40 @@ const Signup = () => {
                             {errors.phone && <p className='mt-1 text-xs text-red-600'>{errors.phone.message}</p>}
                         </div>
 
-                        <div className='mb-6 relative'>
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                placeholder='Password'
-                                className={`w-full px-4 py-2 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-green-200'
-                                    }`}
-                                {...register("password", {
-                                    required: "Password is required",
-                                    minLength: {
-                                        value: 8,
-                                        message: "Password must be at least 8 characters long"
-                                    }
-                                })}
-                            />
+                        <div className="mb-6">
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Password"
+                                    className={`w-full px-4 py-2 pr-10 border rounded-lg bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.password ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-green-200"
+                                        }`}
+                                    {...register("password", {
+                                        required: "Password is required",
+                                        minLength: { value: 8, message: "Password must be at least 8 characters long" }
+                                    })}
+                                />
 
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword((prev) => !prev)}
-                                className="absolute top-1/2 right-3 -translate-y-1/2 text-xl text-gray-500 focus:outline-none"
-                                tabIndex={-1}
-                            >
-                                {showPassword ? <FaEyeSlash /> : <FaEye />}
-                            </button>
-                            {errors.password && <p className='mt-1 text-xs text-red-600'>{errors.password.message}</p>}
+                                <div className="absolute inset-y-0 right-3 flex items-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword((p) => !p)}
+                                        className="text-xl text-gray-500 focus:outline-none"
+                                        tabIndex={-1}
+                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
                         </div>
+
 
                         <button
                             type='submit'
                             disabled={isLoading}
-                            className='h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mb-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-green-300 disabled:cursor-not-allowed'
+                            className='h-12 px-4 text-white bg-blue-600 font-bold rounded-lg w-full mb-4 hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-300 disabled:cursor-not-allowed'
                         >
                             {isLoading ? (
                                 <div className='flex items-center justify-center gap-2'>
